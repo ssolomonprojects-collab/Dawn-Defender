@@ -7,6 +7,7 @@ and extracts 79 features via app.ml.feature_extractor.FeatureExtractor.
 import os
 import warnings
 import pandas as pd
+from app.ml.heuristics import is_trusted_domain
 
 warnings.filterwarnings("ignore")
 
@@ -55,14 +56,25 @@ def predict(url: str) -> dict:
     """
     Returns: {"confidence": float 0.0-1.0 (probability of phishing), "model_used": bool}
     """
+    clean_url = url.strip()
+    if not clean_url:
+        return {"confidence": 0.0, "model_used": False}
+
+    # Fast-path for verified legitimate domains
+    if is_trusted_domain(clean_url):
+        return {"confidence": 0.0, "model_used": True}
+
     if not _load_model_if_available():
         return {"confidence": 0.0, "model_used": False}
+
+    # Normalize scheme if missing
+    full_url = clean_url if "://" in clean_url else f"https://{clean_url}"
 
     try:
         # Case 1: 79-Feature Extractor Model (RandomForest / DecisionTree)
         if _feature_names is not None:
             from app.ml.feature_extractor import FeatureExtractor
-            extractor = FeatureExtractor(url, fetch_page=False)
+            extractor = FeatureExtractor(full_url, fetch_page=False)
             feature_values = extractor.extract_all(_feature_names)
             row = pd.DataFrame([[feature_values[name] for name in _feature_names]], columns=_feature_names)
 
@@ -72,8 +84,7 @@ def predict(url: str) -> dict:
                 if _label_encoder is not None:
                     decoded_classes = [str(c).lower() for c in _label_encoder.inverse_transform(classes)]
                     proba_dict = dict(zip(decoded_classes, probas))
-                    # Check for phishing/bad class
-                    phish_proba = proba_dict.get("phishing", proba_dict.get("bad", proba_dict.get("1", max(probas))))
+                    phish_proba = proba_dict.get("phishing", proba_dict.get("bad", proba_dict.get("1", probas[-1])))
                 else:
                     phish_proba = probas[1] if len(probas) > 1 else probas[0]
                 return {"confidence": float(phish_proba), "model_used": True}
@@ -88,7 +99,7 @@ def predict(url: str) -> dict:
 
         # Case 2: Separate vectorizer provided
         if _vectorizer is not None:
-            features = _vectorizer.transform([url])
+            features = _vectorizer.transform([full_url])
             if hasattr(_model, "predict_proba"):
                 proba = _model.predict_proba(features)[0][1]
             else:
@@ -97,13 +108,11 @@ def predict(url: str) -> dict:
 
         # Case 3: Sklearn Pipeline accepting raw text
         if hasattr(_model, "predict_proba"):
-            proba = _model.predict_proba([url])[0][1]
+            proba = _model.predict_proba([full_url])[0][1]
         else:
-            proba = float(_model.predict([url])[0])
+            proba = float(_model.predict([full_url])[0])
         return {"confidence": float(proba), "model_used": True}
 
     except Exception as e:
         print(f"[URL Model] Error during prediction: {e}")
         return {"confidence": 0.0, "model_used": False}
-
-

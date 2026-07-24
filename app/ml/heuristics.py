@@ -4,6 +4,7 @@ Provides heuristic red flags and initial score hints.
 """
 import re
 from urllib.parse import urlparse
+import tldextract
 
 SUSPICIOUS_TLDS = {
     "tk", "ml", "ga", "cf", "gq", "xyz", "top", "work", "click",
@@ -15,6 +16,18 @@ KNOWN_BRANDS = [
     "facebook", "instagram", "whatsapp", "bank", "sbi", "hdfc", "icici",
     "axis", "kotak", "paytm", "phonepe", "flipkart", "irctc", "uidai", "zerodha"
 ]
+
+TRUSTED_DOMAINS = {
+    "google.com", "youtube.com", "github.com", "wikipedia.org", "amazon.com", "amazon.in",
+    "microsoft.com", "apple.com", "instagram.com", "facebook.com", "twitter.com", "x.com",
+    "linkedin.com", "reddit.com", "netflix.com", "whatsapp.com", "sathyabama.ac.in",
+    "stackoverflow.com", "python.org", "zoom.us", "yahoo.com", "bing.com", "cloudflare.com",
+    "medium.com", "quora.com", "coursera.org", "udemy.com", "w3schools.com", "geeksforgeeks.org",
+    "kaggle.com", "huggingface.co", "pypi.org", "npmjs.com", "sbi.co.in", "hdfcbank.com",
+    "icicibank.com", "axisbank.com", "kotak.com", "paytm.com", "phonepe.com", "flipkart.com",
+    "irctc.co.in", "uidai.gov.in", "incometax.gov.in", "epfindia.gov.in", "openai.com",
+    "steampowered.com", "twitch.tv", "adobe.com", "canva.com", "figma.com", "notion.so"
+}
 
 SCAM_KEYWORDS = [
     "urgent", "verify now", "act now", "suspended", "click here",
@@ -42,15 +55,32 @@ def _levenshtein(a: str, b: str) -> int:
     return prev[-1]
 
 
+def is_trusted_domain(url: str) -> bool:
+    try:
+        ext = tldextract.extract(url)
+        registered = ext.registered_domain.lower()
+        return registered in TRUSTED_DOMAINS
+    except Exception:
+        return False
+
+
 def analyze_url(url: str) -> dict:
     flags = []
+
+    # Check if trusted legitimate domain
+    if is_trusted_domain(url):
+        return {"flags": [], "score_hint": 0}
+
+    full_url = url if "://" in url else f"http://{url}"
+
     try:
-        parsed = urlparse(url if "://" in url else f"http://{url}")
+        parsed = urlparse(full_url)
         host = parsed.netloc.lower().split(":")[0]
     except Exception:
         return {"flags": ["Could not parse this as a valid URL"], "score_hint": 50}
 
-    if not url.startswith("https://"):
+    # Only flag explicit http:// if provided by user
+    if url.startswith("http://"):
         flags.append("Not using HTTPS (unencrypted connection)")
 
     tld = host.split(".")[-1] if "." in host else ""
@@ -58,7 +88,7 @@ def analyze_url(url: str) -> dict:
         flags.append(f"Uncommon/high-risk domain extension (.{tld})")
 
     for brand in KNOWN_BRANDS:
-        if brand in host and not host.endswith(f"{brand}.com") and not host.endswith(f"{brand}.in") and not host.endswith(f"{brand}.co.in"):
+        if brand in host and not (host.endswith(f"{brand}.com") or host.endswith(f"{brand}.in") or host.endswith(f"{brand}.co.in") or host.endswith(f"{brand}.org")):
             dist = _levenshtein(host, f"{brand}.com")
             if 0 < dist <= 3 or "-" in host:
                 flags.append(f"Domain looks like a lookalike/spoof of '{brand}'")
@@ -72,7 +102,8 @@ def analyze_url(url: str) -> dict:
     if re.search(r"bit\.ly|tinyurl|t\.ly|is\.gd|cutt\.ly", host):
         flags.append("Uses URL shortener service to hide final destination")
 
-    return {"flags": flags, "score_hint": min(95, len(flags) * 25)}
+    score_hint = min(95, len(flags) * 25)
+    return {"flags": flags, "score_hint": score_hint}
 
 
 def analyze_text(text: str) -> dict:
