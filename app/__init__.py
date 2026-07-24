@@ -1,7 +1,6 @@
 """
 App factory. Creates the Flask app, sets up the database, login manager,
-and registers each feature as its own blueprint (auth, main, scan) - so
-each "page" genuinely lives in its own file, per your requirement.
+and registers each feature as its own blueprint (auth, main, scan).
 """
 import os
 from flask import Flask
@@ -23,7 +22,7 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + db_path
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["UPLOAD_FOLDER"] = os.path.join(basedir, "app", "static", "uploads")
-    app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB max upload (QR images)
+    app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB max upload
 
     os.makedirs(os.path.join(basedir, "instance"), exist_ok=True)
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
@@ -47,6 +46,13 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(scan_bp)
+
+    @app.after_request
+    def add_no_cache_headers(response):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "-1"
+        return response
 
     with app.app_context():
         db.create_all()
