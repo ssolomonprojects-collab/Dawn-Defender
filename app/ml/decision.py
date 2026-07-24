@@ -29,7 +29,7 @@ RECOMMENDATIONS = {
 
 
 def _verdict_from_score(score: int) -> str:
-    if score >= 65:
+    if score >= 60:
         return "dangerous"
     if score >= 20:
         return "suspicious"

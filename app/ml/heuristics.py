@@ -33,19 +33,21 @@ TRUSTED_DOMAINS = {
 
 # 1. High-Threat Phishing / Malicious Patterns (Weight >= 0.85 -> DANGEROUS)
 DANGEROUS_PATTERNS = [
+    (r"\b(?:action required|urgent action|attention required|immediate response)\b.*\b(?:pay|invoice|bill|verify|login|click|account|suspended|link|http)\b", "Urgent action demand combined with payment, invoice, or verification link", 0.85),
+    (r"\b(?:invoice|billing statement|payment receipt|overdue payment|outstanding invoice|unpaid bill)\b.*\b(?:http|www|\.xyz|\.top|\.site|\.click|\.info|\.work|\.com|\.org|\.net|pay|verify|click)\b", "Invoice or billing demand requiring payment or link verification", 0.85),
     (r"\b(?:enter|verify|provide|update|submit|restore|confirm|reset)\b.*\b(?:otp|pin|password|cvv|account|netbanking|aadhaar|pan|card|atm pin|login|credentials|identity)\b", "Requests sensitive credentials, account verification, or login details", 0.85),
     (r"\b(?:account|access|card|netbanking|services?)\b.*\b(?:suspended|blocked|locked|terminated|deactivated|frozen|restricted)\b", "Urgency threat: claims account or card is suspended, blocked, or restricted", 0.85),
     (r"\b(?:hdfc|sbi|icici|axis|kotak|paytm|paypal|amazon|netflix|apple|microsoft|income tax|epfo|trai|customs)\b.*\b(?:http|www|\.xyz|\.top|\.site|\.click|\.info|\.work|\.com|\.org|\.net)\b", "Impersonates bank, government, or service provider with embedded link", 0.90),
     (r"\b(?:won|winner|selected for|claimed?|lottery|lucky draw|cash prize)\b.*\b(?:rs\.?\s*\d+|\$\d+|\b\d+\s*lakh\b|\b\d+\s*crore\b|\b\d+\s*thousand\b)\b", "Promises unsolicited money, lottery, or prize rewards", 0.85),
     (r"\b(?:virus|malware|infected|warrant|arrest|legal action|court|police|cybercrime)\b.*\b(?:pay|call|click|verify)\b", "Scareware threat: claims malware infection or legal action", 0.90),
-    (r"https?://\S+\.(?:xyz|top|click|site|info|work|gq|tk|ml|cf|ga)\S*", "Contains link using high-risk/suspicious domain extension", 0.90),
+    (r"https?://\S+\.(?:xyz|top|click|site|info|work|gq|tk|ml|cf|ga)\S*", "Contains link using high-risk/suspicious domain extension", 0.85),
 ]
 
 # 2. Medium-Threat Suspicious Patterns (Weight = 0.35-0.45 -> SUSPICIOUS)
 SUSPICIOUS_PATTERNS = [
-    (r"\b(?:action required|urgent action|attention required|immediate response)\b", "Uses urgent action language common in phishing alerts", 0.35),
-    (r"\b(?:invoice|billing statement|payment receipt|overdue payment|outstanding invoice|unpaid bill)\b", "Mentions invoices or billing statements (verify sender authenticity)", 0.35),
-    (r"\b(?:package delivery|shipment update|parcel status|delivery notification)\b", "Mentions package delivery or shipment notifications", 0.35),
+    (r"\b(?:package delivery|shipment update|parcel status|delivery notification)\b", "Mentions package delivery or shipment notifications (verify before clicking)", 0.35),
+    (r"\b(?:action required|urgent action|attention required)\b", "Uses urgent action language in subject line", 0.35),
+    (r"\b(?:invoice|billing statement|payment receipt)\b", "Mentions generic invoice or payment receipt", 0.35),
 ]
 
 
@@ -162,7 +164,7 @@ def analyze_text(text: str) -> dict:
     confidence = 0.0
     lowered = text.lower()
 
-    # 1. Sender Email Address / Domain Spoofing Check
+    # 1. Sender Email Address Check
     addr_conf, addr_flags = analyze_email_address(text)
     if addr_flags:
         flags.extend(addr_flags)
@@ -177,14 +179,14 @@ def analyze_text(text: str) -> dict:
                 flags.append(f"Embedded Link Warning: {f}")
             confidence = max(confidence, u_res["score_hint"] / 100.0)
 
-    # 3. Check DANGEROUS Patterns (High Priority >= 0.85)
+    # 3. Check DANGEROUS Patterns (High Priority >= 0.85 -> DANGEROUS)
     for pattern, description, weight in DANGEROUS_PATTERNS:
         if re.search(pattern, lowered):
             flags.append(description)
             confidence = max(confidence, weight)
 
-    # 4. Check SUSPICIOUS Patterns (Medium Priority = 0.35-0.45)
-    if confidence < 0.65:
+    # 4. Check SUSPICIOUS Patterns (Medium Priority = 0.35 -> SUSPICIOUS)
+    if confidence < 0.60:
         for pattern, description, weight in SUSPICIOUS_PATTERNS:
             if re.search(pattern, lowered):
                 flags.append(description)
