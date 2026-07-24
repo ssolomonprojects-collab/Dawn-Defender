@@ -57,9 +57,9 @@ def build_verdict(scan_type: str, flags: list, heuristic_score_hint: int,
     model_used: whether a real trained model produced model_confidence
     """
     if model_used:
-        # Once a real model is plugged in, weight it more heavily than
-        # heuristics - it's had actual training data behind it.
-        combined_score = int(round((model_confidence * 100) * 0.7 + heuristic_score_hint * 0.3))
+        model_score = int(round(model_confidence * 100))
+        # If the model is confident in a scam/phishing attempt, ensure risk score reflects that
+        combined_score = max(model_score, int(round(model_score * 0.7 + heuristic_score_hint * 0.3)), heuristic_score_hint)
     else:
         combined_score = heuristic_score_hint
 
