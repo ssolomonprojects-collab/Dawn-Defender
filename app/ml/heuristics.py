@@ -1,22 +1,32 @@
 """
-Fast, deterministic checks. These run regardless of whether the trained
-models are plugged in yet, so the app always gives a sensible answer even
-before Colab models are downloaded and wired up.
+Fast, deterministic checks for URLs, SMS, and Email text.
+Provides heuristic red flags and initial score hints.
 """
 import re
 from urllib.parse import urlparse
 
-SUSPICIOUS_TLDS = {"tk", "ml", "ga", "cf", "gq", "xyz", "top", "work", "click"}
+SUSPICIOUS_TLDS = {
+    "tk", "ml", "ga", "cf", "gq", "xyz", "top", "work", "click",
+    "site", "info", "online", "live", "tech", "club", "store", "vip", "cc", "icu"
+}
 
 KNOWN_BRANDS = [
     "google", "paypal", "amazon", "microsoft", "apple", "netflix",
     "facebook", "instagram", "whatsapp", "bank", "sbi", "hdfc", "icici",
+    "axis", "kotak", "paytm", "phonepe", "flipkart", "irctc", "uidai", "zerodha"
 ]
 
-URGENCY_WORDS = [
+SCAM_KEYWORDS = [
     "urgent", "verify now", "act now", "suspended", "click here",
     "limited time", "your account will be", "immediately", "winner",
     "claim your", "otp", "password expired", "congratulations",
+    "blocked", "unauthorized", "locked", "deactivated", "expire",
+    "security alert", "action required", "unusual activity", "refund",
+    "lottery", "prize", "won", "free", "cashback", "reward", "lakh",
+    "kyc", "aadhaar", "pan card", "income tax", "epfo", "customs",
+    "delivery failed", "package held", "wire transfer", "payment failed",
+    "dispute", "penalty", "legal action", "disconnection", "trai",
+    "scam", "phishing", "fake", "malware", "virus", "hacked", "compromised"
 ]
 
 
@@ -41,34 +51,52 @@ def analyze_url(url: str) -> dict:
         return {"flags": ["Could not parse this as a valid URL"], "score_hint": 50}
 
     if not url.startswith("https://"):
-        flags.append("Not using HTTPS")
+        flags.append("Not using HTTPS (unencrypted connection)")
 
     tld = host.split(".")[-1] if "." in host else ""
     if tld in SUSPICIOUS_TLDS:
         flags.append(f"Uncommon/high-risk domain extension (.{tld})")
 
     for brand in KNOWN_BRANDS:
-        if brand in host and not host.endswith(f"{brand}.com"):
+        if brand in host and not host.endswith(f"{brand}.com") and not host.endswith(f"{brand}.in") and not host.endswith(f"{brand}.co.in"):
             dist = _levenshtein(host, f"{brand}.com")
-            if 0 < dist <= 3:
-                flags.append(f"Domain looks like a lookalike of '{brand}'")
+            if 0 < dist <= 3 or "-" in host:
+                flags.append(f"Domain looks like a lookalike/spoof of '{brand}'")
 
     if re.search(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", host):
         flags.append("URL uses a raw IP address instead of a domain name")
 
-    if host.count("-") >= 3:
+    if host.count("-") >= 2:
         flags.append("Unusually many hyphens in domain (common obfuscation trick)")
 
-    return {"flags": flags, "score_hint": min(90, len(flags) * 20)}
+    if re.search(r"bit\.ly|tinyurl|t\.ly|is\.gd|cutt\.ly", host):
+        flags.append("Uses URL shortener service to hide final destination")
+
+    return {"flags": flags, "score_hint": min(95, len(flags) * 25)}
 
 
 def analyze_text(text: str) -> dict:
     flags = []
     lowered = text.lower()
-    for word in URGENCY_WORDS:
+
+    matched_keywords = []
+    for word in SCAM_KEYWORDS:
         if word in lowered:
-            flags.append(f'Contains urgency/pressure language: "{word}"')
-    urls_found = re.findall(r"https?://\S+", text)
+            matched_keywords.append(word)
+
+    if matched_keywords:
+        sample_words = ", ".join([f'"{w}"' for w in matched_keywords[:3]])
+        flags.append(f"Contains suspicious/urgency keywords: {sample_words}")
+
+    urls_found = re.findall(r"https?://\S+|www\.\S+|\S+\.(?:xyz|top|site|click|info|work|gq|tk)\S*", text)
     if urls_found:
-        flags.append("Contains an embedded link")
-    return {"flags": flags, "score_hint": min(90, len(flags) * 15), "urls_found": urls_found}
+        flags.append(f"Contains suspicious embedded link: {urls_found[0][:40]}")
+
+    if re.search(r"\b(?:otp|pin|password|cvv|account number|aadhaar|pan)\b", lowered):
+        flags.append("Requests sensitive credentials or personal financial information")
+
+    if re.search(r"rs\.?\s*\d+|\$\d+|\b\d+\s*lakh\b|\b\d+\s*crore\b", lowered):
+        flags.append("Mentions monetary values or financial transactions")
+
+    score_hint = min(95, len(flags) * 25 + len(matched_keywords) * 10)
+    return {"flags": flags, "score_hint": score_hint, "urls_found": urls_found}
