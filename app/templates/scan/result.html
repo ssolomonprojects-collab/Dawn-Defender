@@ -1,30 +1,84 @@
 {% extends "base.html" %}
-{% block title %}Scan Result - Dawn Defender{% endblock %}
+{% block title %}Scan Result — Dawn Defender{% endblock %}
 {% block content %}
+
 <div class="result-card verdict-{{ result.verdict }}">
-    <div class="verdict-badge">{{ result.verdict|upper }}</div>
-    <p class="risk-score">Risk score: {{ result.risk_score }}/100</p>
 
-    <p class="scanned-content"><strong>{{ scan_type }} scanned:</strong> {{ content }}</p>
+    <!-- Animated Risk Gauge -->
+    <div class="risk-gauge-wrap">
+        <div class="risk-gauge">
+            <svg viewBox="0 0 160 80" xmlns="http://www.w3.org/2000/svg">
+                <!-- Background arc -->
+                <path d="M 16 80 A 64 64 0 0 1 144 80"
+                      fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10" stroke-linecap="round"/>
+                <!-- Colored arc -->
+                <path id="gaugeArc" d="M 16 80 A 64 64 0 0 1 144 80"
+                      fill="none"
+                      stroke="{% if result.verdict == 'dangerous' %}#ef4444{% elif result.verdict == 'suspicious' %}#f59e0b{% else %}#22c55e{% endif %}"
+                      stroke-width="10" stroke-linecap="round"
+                      stroke-dasharray="201"
+                      stroke-dashoffset="{{ 201 - (result.risk_score / 100 * 201)|int }}"
+                      style="filter: drop-shadow(0 0 6px {% if result.verdict == 'dangerous' %}#ef444488{% elif result.verdict == 'suspicious' %}#f59e0b88{% else %}#22c55e88{% endif %});
+                             transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);"/>
+            </svg>
+            <div class="gauge-label">
+                <div class="gauge-score">{{ result.risk_score }}</div>
+                <div class="gauge-max">/100</div>
+            </div>
+        </div>
+        <div class="verdict-badge">
+            {% if result.verdict == 'dangerous' %}⚠ DANGEROUS
+            {% elif result.verdict == 'suspicious' %}⚡ SUSPICIOUS
+            {% else %}✓ SAFE
+            {% endif %}
+        </div>
+    </div>
 
+    <!-- Scanned content -->
+    <div class="result-section">
+        <h3>{{ scan_type }} Scanned</h3>
+        <div class="scanned-content">{{ content }}</div>
+    </div>
+
+    <!-- Red flags -->
     {% if result.red_flags %}
-    <h3>Red flags</h3>
-    <ul>
-        {% for flag in result.red_flags %}
-        <li>{{ flag }}</li>
-        {% endfor %}
-    </ul>
+    <div class="result-section">
+        <h3>Red Flags Detected</h3>
+        <ul class="red-flags-list">
+            {% for flag in result.red_flags %}
+            <li>{{ flag }}</li>
+            {% endfor %}
+        </ul>
+    </div>
     {% endif %}
 
-    <h3>Why</h3>
-    <p>{{ result.explanation }}</p>
+    <!-- Explanation -->
+    <div class="result-section">
+        <h3>Analysis</h3>
+        <div class="explanation-box">{{ result.explanation }}</div>
+    </div>
 
-    <h3>What to do</h3>
-    <p>{{ result.recommendation }}</p>
+    <!-- Recommendation -->
+    <div class="result-section">
+        <h3>What To Do</h3>
+        <div class="recommendation-box">{{ result.recommendation }}</div>
+    </div>
 
     <div class="result-actions">
-        <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">← Dashboard</a>
         <a href="{{ url_for('scan.history') }}" class="btn btn-secondary">View History</a>
     </div>
 </div>
+
+<script>
+  // Animate gauge on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const arc = document.getElementById('gaugeArc');
+    if (arc) {
+      const target = arc.getAttribute('stroke-dashoffset');
+      arc.style.strokeDashoffset = '201';
+      setTimeout(() => { arc.style.strokeDashoffset = target; }, 100);
+    }
+  });
+</script>
 {% endblock %}

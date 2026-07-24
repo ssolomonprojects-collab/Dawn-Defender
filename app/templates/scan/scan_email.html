@@ -1,12 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Scan an Email - Dawn Defender{% endblock %}
+{% block title %}Email Scanner — Dawn Defender{% endblock %}
 {% block content %}
-<div class="form-card">
-    <h2>✉️ Scan an Email</h2>
+
+<div class="scan-header">
+    <h1>✉️ Email Scanner</h1>
+    <p>Paste the email body or subject+body — trained on 1500+ real phishing samples including Indian banking, government, and delivery scams.</p>
+</div>
+
+<div class="scan-card">
     <form method="POST">
-        <label for="text">Paste the email content</label>
-        <textarea id="text" name="text" rows="10" placeholder="Paste the full email text here" required></textarea>
-        <button type="submit" class="btn btn-primary">Scan</button>
+        <label for="text">Email Content</label>
+        <textarea id="text" name="text" rows="8" placeholder="Paste the full email content here...&#10;&#10;e.g. Subject: URGENT: Your HDFC account is suspended&#10;Dear Customer, click here to verify: http://..." required></textarea>
+        <button type="submit" class="btn btn-primary">Analyze Email →</button>
     </form>
 </div>
+
 {% endblock %}

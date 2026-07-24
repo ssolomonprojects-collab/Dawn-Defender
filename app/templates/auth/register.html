@@ -1,23 +1,30 @@
 {% extends "base.html" %}
-{% block title %}Register - Dawn Defender{% endblock %}
+{% block title %}Register — Dawn Defender{% endblock %}
 {% block content %}
+
 <div class="form-card">
-    <h2>Create your account</h2>
+    <h2>Create account</h2>
+    <p class="form-sub">Start detecting phishing and scams for free.</p>
     <form method="POST">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" value="{{ username or '' }}" required>
-
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" value="{{ email or '' }}" required>
-
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" required minlength="6">
-
-        <label for="confirm_password">Confirm Password</label>
-        <input type="password" id="confirm_password" name="confirm_password" required minlength="6">
-
-        <button type="submit" class="btn btn-primary">Register</button>
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="choose_a_username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="new-password">
+        </div>
+        <div class="form-group">
+            <label for="confirm">Confirm Password</label>
+            <input type="password" id="confirm" name="confirm" placeholder="••••••••" required autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 8px;">Create Account →</button>
     </form>
-    <p class="form-footer">Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+    <p class="form-footer">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
 </div>
+
 {% endblock %}

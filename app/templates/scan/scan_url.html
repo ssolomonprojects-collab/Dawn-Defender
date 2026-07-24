@@ -1,12 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Scan a URL - Dawn Defender{% endblock %}
+{% block title %}URL Scanner — Dawn Defender{% endblock %}
 {% block content %}
-<div class="form-card">
-    <h2>🔗 Scan a URL</h2>
+
+<div class="scan-header">
+    <h1>🔗 URL Scanner</h1>
+    <p>Paste any suspicious link — we'll analyze 79 structural and lexical features instantly.</p>
+</div>
+
+<div class="scan-card">
     <form method="POST">
-        <label for="url">Paste the URL</label>
-        <input type="text" id="url" name="url" placeholder="https://example.com" required>
-        <button type="submit" class="btn btn-primary">Scan</button>
+        <label for="url">Suspicious URL</label>
+        <input type="text" id="url" name="url" placeholder="https://example-suspicious-link.xyz/login" required autocomplete="off" spellcheck="false">
+        <button type="submit" class="btn btn-primary">Analyze URL →</button>
     </form>
 </div>
+
 {% endblock %}

@@ -3,20 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dawn Defender — AI-powered phishing and scam detection for URLs, SMS, and emails.">
     <title>{% block title %}Dawn Defender{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <nav class="navbar">
-        <a href="{{ url_for('main.index') }}" class="brand">🛡️ Dawn Defender</a>
+        <a href="{{ url_for('main.index') }}" class="brand">Dawn Defender</a>
         <div class="nav-links">
             {% if current_user.is_authenticated %}
                 <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('scan.scan_url') }}">URL</a>
+                <a href="{{ url_for('scan.scan_sms') }}">SMS</a>
+                <a href="{{ url_for('scan.scan_email') }}">Email</a>
                 <a href="{{ url_for('scan.history') }}">History</a>
                 <a href="{{ url_for('auth.logout') }}">Logout</a>
             {% else %}
                 <a href="{{ url_for('auth.login') }}">Login</a>
-                <a href="{{ url_for('auth.register') }}">Register</a>
+                <a href="{{ url_for('auth.register') }}">Get Started</a>
             {% endif %}
         </div>
     </nav>

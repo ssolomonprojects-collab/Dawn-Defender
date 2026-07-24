@@ -1,12 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Scan an SMS - Dawn Defender{% endblock %}
+{% block title %}SMS Scanner — Dawn Defender{% endblock %}
 {% block content %}
-<div class="form-card">
-    <h2>💬 Scan an SMS</h2>
+
+<div class="scan-header">
+    <h1>💬 SMS Scanner</h1>
+    <p>Paste a suspicious text message — AI checks for scam patterns, urgency traps, and malicious links.</p>
+</div>
+
+<div class="scan-card">
     <form method="POST">
-        <label for="text">Paste the message</label>
-        <textarea id="text" name="text" rows="6" placeholder="Paste the SMS text here" required></textarea>
-        <button type="submit" class="btn btn-primary">Scan</button>
+        <label for="text">SMS Message</label>
+        <textarea id="text" name="text" rows="5" placeholder="Paste the suspicious SMS here...&#10;&#10;e.g. URGENT: Your account has been suspended. Verify at http://..." required></textarea>
+        <button type="submit" class="btn btn-primary">Analyze Message →</button>
     </form>
 </div>
+
 {% endblock %}

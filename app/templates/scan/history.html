@@ -1,18 +1,29 @@
 {% extends "base.html" %}
-{% block title %}Scan History - Dawn Defender{% endblock %}
+{% block title %}Scan History — Dawn Defender{% endblock %}
 {% block content %}
-<h1>Your scan history</h1>
+
+<h1>Scan History</h1>
+<p class="welcome-text">All scans are stored locally and never shared.</p>
+
 {% if scans %}
-<table class="scan-table">
+<table class="scan-table" style="margin-top: 24px;">
     <thead>
-        <tr><th>Type</th><th>Content</th><th>Verdict</th><th>Risk</th><th>When</th></tr>
+        <tr>
+            <th>Type</th>
+            <th>Content</th>
+            <th>Verdict</th>
+            <th>Risk Score</th>
+            <th>Date &amp; Time (IST)</th>
+        </tr>
     </thead>
     <tbody>
         {% for scan in scans %}
         <tr class="verdict-row-{{ scan.verdict }}">
-            <td>{{ scan.scan_type|upper }}</td>
+            <td><strong>{{ scan.scan_type|upper }}</strong></td>
             <td class="truncate">{{ scan.content_preview }}</td>
-            <td>{{ scan.verdict|capitalize }}</td>
+            <td>
+                <span class="pill pill-{{ scan.verdict }}">{{ scan.verdict }}</span>
+            </td>
             <td>{{ scan.risk_score }}/100</td>
             <td>{{ scan.formatted_time() }}</td>
         </tr>
@@ -20,6 +31,9 @@
     </tbody>
 </table>
 {% else %}
-<p>No scans yet.</p>
+<div class="empty-state" style="margin-top: 48px;">
+    <p>No scans yet. <a href="{{ url_for('main.dashboard') }}" style="color: var(--cyan);">Go scan something →</a></p>
+</div>
 {% endif %}
+
 {% endblock %}

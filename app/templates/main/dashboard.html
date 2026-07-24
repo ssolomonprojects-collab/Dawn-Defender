@@ -1,36 +1,45 @@
 {% extends "base.html" %}
-{% block title %}Dashboard - Dawn Defender{% endblock %}
+{% block title %}Dashboard — Dawn Defender{% endblock %}
 {% block content %}
-<h1>Welcome, {{ current_user.username }}</h1>
-<p>Choose what you'd like to scan:</p>
+
+<h1>Welcome back, {{ current_user.username }} 👋</h1>
+<p class="welcome-text">Choose a scanner below to check suspicious content.</p>
 
 <div class="feature-grid">
     <a href="{{ url_for('scan.scan_url') }}" class="feature-card feature-link">
-        <h3>🔗 Scan a URL</h3>
-        <p>Paste a link to check if it's a phishing attempt.</p>
+        <h3>🔗 URL Scanner</h3>
+        <p>Check if a link is a phishing attempt using 79-feature ML analysis.</p>
     </a>
     <a href="{{ url_for('scan.scan_sms') }}" class="feature-card feature-link">
-        <h3>💬 Scan an SMS</h3>
-        <p>Paste a text message to check for scam patterns.</p>
+        <h3>💬 SMS Scanner</h3>
+        <p>Detect scam text messages and urgency-based social engineering.</p>
     </a>
     <a href="{{ url_for('scan.scan_email') }}" class="feature-card feature-link">
-        <h3>✉️ Scan an Email</h3>
-        <p>Paste email content to check for phishing signs.</p>
+        <h3>✉️ Email Scanner</h3>
+        <p>Identify phishing emails impersonating banks, services, and government bodies.</p>
     </a>
 </div>
 
-<h2>Recent scans</h2>
+<h2>Recent Scans</h2>
 {% if recent_scans %}
 <table class="scan-table">
     <thead>
-        <tr><th>Type</th><th>Content</th><th>Verdict</th><th>Risk</th><th>When (IST)</th></tr>
+        <tr>
+            <th>Type</th>
+            <th>Content</th>
+            <th>Verdict</th>
+            <th>Risk</th>
+            <th>When (IST)</th>
+        </tr>
     </thead>
     <tbody>
         {% for scan in recent_scans %}
         <tr class="verdict-row-{{ scan.verdict }}">
-            <td>{{ scan.scan_type|upper }}</td>
+            <td><strong>{{ scan.scan_type|upper }}</strong></td>
             <td class="truncate">{{ scan.content_preview }}</td>
-            <td>{{ scan.verdict|capitalize }}</td>
+            <td>
+                <span class="pill pill-{{ scan.verdict }}">{{ scan.verdict }}</span>
+            </td>
             <td>{{ scan.risk_score }}/100</td>
             <td>{{ scan.formatted_time() }}</td>
         </tr>
@@ -38,6 +47,9 @@
     </tbody>
 </table>
 {% else %}
-<p>No scans yet - try one of the scanners above.</p>
+<div class="empty-state">
+    <p>No scans yet — try one of the scanners above!</p>
+</div>
 {% endif %}
+
 {% endblock %}
