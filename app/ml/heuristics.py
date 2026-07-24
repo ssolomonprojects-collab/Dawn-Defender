@@ -31,6 +31,7 @@ TRUSTED_DOMAINS = {
     "aol.com", "zoho.com", "gmx.com", "mail.com"
 }
 
+# 1. High-Threat Phishing / Malicious Patterns (Weight >= 0.85 -> DANGEROUS)
 DANGEROUS_PATTERNS = [
     (r"\b(?:enter|verify|provide|update|submit|restore|confirm|reset)\b.*\b(?:otp|pin|password|cvv|account|netbanking|aadhaar|pan|card|atm pin|login|credentials|identity)\b", "Requests sensitive credentials, account verification, or login details", 0.85),
     (r"\b(?:account|access|card|netbanking|services?)\b.*\b(?:suspended|blocked|locked|terminated|deactivated|frozen|restricted)\b", "Urgency threat: claims account or card is suspended, blocked, or restricted", 0.85),
@@ -40,10 +41,11 @@ DANGEROUS_PATTERNS = [
     (r"https?://\S+\.(?:xyz|top|click|site|info|work|gq|tk|ml|cf|ga)\S*", "Contains link using high-risk/suspicious domain extension", 0.90),
 ]
 
+# 2. Medium-Threat Suspicious Patterns (Weight = 0.35-0.45 -> SUSPICIOUS)
 SUSPICIOUS_PATTERNS = [
     (r"\b(?:action required|urgent action|attention required|immediate response)\b", "Uses urgent action language common in phishing alerts", 0.35),
     (r"\b(?:invoice|billing statement|payment receipt|overdue payment|outstanding invoice|unpaid bill)\b", "Mentions invoices or billing statements (verify sender authenticity)", 0.35),
-    (r"\b(?:package delivery|shipment update|parcel status|delivery notification)\b", "Mentions package delivery or shipment notifications", 0.30),
+    (r"\b(?:package delivery|shipment update|parcel status|delivery notification)\b", "Mentions package delivery or shipment notifications", 0.35),
 ]
 
 
@@ -140,17 +142,18 @@ def analyze_email_address(text: str) -> tuple[float, list[str]]:
         if registered_domain in TRUSTED_DOMAINS:
             continue
 
-        if tld in SUSPICIOUS_TLDS:
-            flags.append(f"Sender email uses high-risk domain extension (.{tld})")
-            confidence = max(confidence, 0.90)
-
+        # Check for Brand Spoofing (DANGEROUS: 0.95)
         for brand in KNOWN_BRANDS:
             if brand in domain_str and registered_domain not in {f"{brand}.com", f"{brand}.in", f"{brand}.co.in", f"{brand}.org"}:
                 flags.append(f"Sender email domain ('{domain_str}') is a lookalike/spoof of '{brand}'")
                 confidence = max(confidence, 0.95)
                 break
 
-    confidence = max(0.0, min(1.0, confidence))
+        # Check for High-Risk TLD without brand spoofing (SUSPICIOUS: 0.40)
+        if not flags and tld in SUSPICIOUS_TLDS:
+            flags.append(f"Sender email uses high-risk domain extension (.{tld})")
+            confidence = max(confidence, 0.40)
+
     return confidence, flags
 
 
@@ -165,7 +168,7 @@ def analyze_text(text: str) -> dict:
         flags.extend(addr_flags)
         confidence = max(confidence, addr_conf)
 
-    # 2. Embedded Link Phishing Analysis (Check every URL in the email)
+    # 2. Embedded Link Phishing Analysis
     urls = re.findall(r"https?://\S+|www\.\S+|\S+\.(?:xyz|top|site|click|info|work|gq|tk)\S*", text)
     for u in urls:
         u_res = analyze_url(u)
@@ -174,14 +177,14 @@ def analyze_text(text: str) -> dict:
                 flags.append(f"Embedded Link Warning: {f}")
             confidence = max(confidence, u_res["score_hint"] / 100.0)
 
-    # 3. Check DANGEROUS Patterns (High Priority)
+    # 3. Check DANGEROUS Patterns (High Priority >= 0.85)
     for pattern, description, weight in DANGEROUS_PATTERNS:
         if re.search(pattern, lowered):
             flags.append(description)
             confidence = max(confidence, weight)
 
-    # 4. Check SUSPICIOUS Patterns (Medium Priority - only if no dangerous flags yet)
-    if confidence < 0.50:
+    # 4. Check SUSPICIOUS Patterns (Medium Priority = 0.35-0.45)
+    if confidence < 0.65:
         for pattern, description, weight in SUSPICIOUS_PATTERNS:
             if re.search(pattern, lowered):
                 flags.append(description)
