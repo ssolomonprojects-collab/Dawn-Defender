@@ -31,12 +31,19 @@ TRUSTED_DOMAINS = {
     "aol.com", "zoho.com", "gmx.com", "mail.com"
 }
 
-PHISHING_PATTERNS = [
-    (r"\b(?:enter|verify|provide|update|submit|restore|confirm|reset)\b.*\b(?:otp|pin|password|cvv|account|netbanking|aadhaar|pan|card|login|access|identity)\b", "Requests sensitive credentials, account verification, or login details", 0.80),
-    (r"\b(?:account|access|card|netbanking|services?)\b.*\b(?:suspended|blocked|locked|terminated|deactivated|frozen|restricted)\b", "Urgency threat: claims account or card is suspended, blocked, or restricted", 0.80),
-    (r"\b(?:hdfc|sbi|icici|axis|kotak|paytm|paypal|amazon|netflix|apple|microsoft|income tax|epfo|trai|customs)\b.*\b(?:http|www|\.xyz|\.top|\.site|\.click|\.info|\.work|\.com|\.org|\.net)\b", "Impersonates bank, government, or service provider with embedded link", 0.85),
+DANGEROUS_PATTERNS = [
+    (r"\b(?:enter|verify|provide|update|submit|restore|confirm|reset)\b.*\b(?:otp|pin|password|cvv|account|netbanking|aadhaar|pan|card|atm pin|login|credentials|identity)\b", "Requests sensitive credentials, account verification, or login details", 0.85),
+    (r"\b(?:account|access|card|netbanking|services?)\b.*\b(?:suspended|blocked|locked|terminated|deactivated|frozen|restricted)\b", "Urgency threat: claims account or card is suspended, blocked, or restricted", 0.85),
+    (r"\b(?:hdfc|sbi|icici|axis|kotak|paytm|paypal|amazon|netflix|apple|microsoft|income tax|epfo|trai|customs)\b.*\b(?:http|www|\.xyz|\.top|\.site|\.click|\.info|\.work|\.com|\.org|\.net)\b", "Impersonates bank, government, or service provider with embedded link", 0.90),
     (r"\b(?:won|winner|selected for|claimed?|lottery|lucky draw|cash prize)\b.*\b(?:rs\.?\s*\d+|\$\d+|\b\d+\s*lakh\b|\b\d+\s*crore\b|\b\d+\s*thousand\b)\b", "Promises unsolicited money, lottery, or prize rewards", 0.85),
-    (r"\b(?:virus|malware|infected|warrant|arrest|legal action|court|police|cybercrime)\b.*\b(?:pay|call|click|verify)\b", "Scareware threat: claims malware infection or legal action", 0.85),
+    (r"\b(?:virus|malware|infected|warrant|arrest|legal action|court|police|cybercrime)\b.*\b(?:pay|call|click|verify)\b", "Scareware threat: claims malware infection or legal action", 0.90),
+    (r"https?://\S+\.(?:xyz|top|click|site|info|work|gq|tk|ml|cf|ga)\S*", "Contains link using high-risk/suspicious domain extension", 0.90),
+]
+
+SUSPICIOUS_PATTERNS = [
+    (r"\b(?:action required|urgent action|attention required|immediate response)\b", "Uses urgent action language common in phishing alerts", 0.35),
+    (r"\b(?:invoice|billing statement|payment receipt|overdue payment|outstanding invoice|unpaid bill)\b", "Mentions invoices or billing statements (verify sender authenticity)", 0.35),
+    (r"\b(?:package delivery|shipment update|parcel status|delivery notification)\b", "Mentions package delivery or shipment notifications", 0.30),
 ]
 
 
@@ -167,11 +174,18 @@ def analyze_text(text: str) -> dict:
                 flags.append(f"Embedded Link Warning: {f}")
             confidence = max(confidence, u_res["score_hint"] / 100.0)
 
-    # 3. Phishing Threat Intent Patterns
-    for pattern, description, weight in PHISHING_PATTERNS:
+    # 3. Check DANGEROUS Patterns (High Priority)
+    for pattern, description, weight in DANGEROUS_PATTERNS:
         if re.search(pattern, lowered):
             flags.append(description)
             confidence = max(confidence, weight)
+
+    # 4. Check SUSPICIOUS Patterns (Medium Priority - only if no dangerous flags yet)
+    if confidence < 0.50:
+        for pattern, description, weight in SUSPICIOUS_PATTERNS:
+            if re.search(pattern, lowered):
+                flags.append(description)
+                confidence = max(confidence, weight)
 
     final_score = int(round(max(0.0, min(1.0, confidence)) * 100)) if flags else 0
     return {
