@@ -29,9 +29,9 @@ RECOMMENDATIONS = {
 
 
 def _verdict_from_score(score: int) -> str:
-    if score >= 50:
+    if score >= 40:
         return "dangerous"
-    if score >= 25:
+    if score >= 20:
         return "suspicious"
     return "safe"
 
@@ -46,8 +46,7 @@ def build_verdict(scan_type: str, flags: list, heuristic_score_hint: int,
     """
     if model_used:
         model_score = int(round(model_confidence * 100))
-        # Ensure high risk from either ML model OR heuristics triggers appropriate alert
-        combined_score = max(model_score, heuristic_score_hint, int(round(model_score * 0.7 + heuristic_score_hint * 0.3)))
+        combined_score = max(model_score, heuristic_score_hint)
     else:
         combined_score = heuristic_score_hint
 
