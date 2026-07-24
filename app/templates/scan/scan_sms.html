@@ -3,14 +3,14 @@
 {% block content %}
 
 <div class="scan-header">
-    <h1>💬 SMS Scanner</h1>
-    <p>Paste a suspicious text message — AI checks for scam patterns, urgency traps, and malicious links.</p>
+    <h1>💬 SMS Scam Scanner</h1>
+    <p>Paste a suspicious text message or SMS notice — AI checks for urgency pressure, fake reward traps, and OTP harvesting patterns.</p>
 </div>
 
 <div class="scan-card">
     <form method="POST">
-        <label for="text">SMS Message</label>
-        <textarea id="text" name="text" rows="5" placeholder="Paste the suspicious SMS here...&#10;&#10;e.g. URGENT: Your account has been suspended. Verify at http://..." required></textarea>
+        <label for="text">SMS Message Text</label>
+        <textarea id="text" name="text" rows="6" placeholder="Paste the suspicious SMS here...&#10;&#10;e.g. Your electricity bill of Rs.3,200 is overdue. Pay immediately to prevent disconnection: http://..." required></textarea>
         <button type="submit" class="btn btn-primary">Analyze Message →</button>
     </form>
 </div>

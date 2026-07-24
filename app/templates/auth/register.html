@@ -3,16 +3,16 @@
 {% block content %}
 
 <div class="form-card">
-    <h2>Create account</h2>
-    <p class="form-sub">Start detecting phishing and scams for free.</p>
+    <h2>Create your account</h2>
+    <p class="form-sub">Start detecting phishing, scam SMS, and dangerous links for free.</p>
     <form method="POST">
         <div class="form-group">
             <label for="username">Username</label>
-            <input type="text" id="username" name="username" placeholder="choose_a_username" required autocomplete="username">
+            <input type="text" id="username" name="username" placeholder="Choose a username" required autocomplete="username">
         </div>
         <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" placeholder="name@example.com" required autocomplete="email">
         </div>
         <div class="form-group">
             <label for="password">Password</label>
@@ -22,9 +22,9 @@
             <label for="confirm">Confirm Password</label>
             <input type="password" id="confirm" name="confirm" placeholder="••••••••" required autocomplete="new-password">
         </div>
-        <button type="submit" class="btn btn-primary" style="margin-top: 8px;">Create Account →</button>
+        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Create Account →</button>
     </form>
-    <p class="form-footer">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a></p>
+    <p class="form-footer">Already have an account? <a href="{{ url_for('auth.login') }}">Sign in here</a></p>
 </div>
 
 {% endblock %}

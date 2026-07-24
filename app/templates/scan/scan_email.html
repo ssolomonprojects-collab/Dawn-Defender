@@ -3,14 +3,14 @@
 {% block content %}
 
 <div class="scan-header">
-    <h1>✉️ Email Scanner</h1>
-    <p>Paste the email body or subject+body — trained on 1500+ real phishing samples including Indian banking, government, and delivery scams.</p>
+    <h1>✉️ Email Phishing Scanner</h1>
+    <p>Paste the email body, subject line, or sender email ID. Our Dual-Engine AI detects bank impersonation, scareware, and suspicious domain extensions.</p>
 </div>
 
 <div class="scan-card">
     <form method="POST">
-        <label for="text">Email Content</label>
-        <textarea id="text" name="text" rows="8" placeholder="Paste the full email content here...&#10;&#10;e.g. Subject: URGENT: Your HDFC account is suspended&#10;Dear Customer, click here to verify: http://..." required></textarea>
+        <label for="text">Email Content or Sender Address</label>
+        <textarea id="text" name="text" rows="8" placeholder="Paste full email content or sender address here...&#10;&#10;e.g. Subject: URGENT: Your HDFC account is suspended&#10;Dear Customer, click here to verify your account: http://..." required></textarea>
         <button type="submit" class="btn btn-primary">Analyze Email →</button>
     </form>
 </div>
