@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Scan a QR Code - Dawn Defender{% endblock %}
+{% block content %}
+<div class="form-card">
+    <h2>📷 Scan a QR Code</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <label for="qr_image">Upload a QR code image (PNG or JPG)</label>
+        <input type="file" id="qr_image" name="qr_image" accept=".png,.jpg,.jpeg" required>
+        <button type="submit" class="btn btn-primary">Scan</button>
+    </form>
+</div>
+{% endblock %}

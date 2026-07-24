@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Scan History - Dawn Defender{% endblock %}
+{% block content %}
+<h1>Your scan history</h1>
+{% if scans %}
+<table class="scan-table">
+    <thead>
+        <tr><th>Type</th><th>Content</th><th>Verdict</th><th>Risk</th><th>When</th></tr>
+    </thead>
+    <tbody>
+        {% for scan in scans %}
+        <tr class="verdict-row-{{ scan.verdict }}">
+            <td>{{ scan.scan_type|upper }}</td>
+            <td class="truncate">{{ scan.content_preview }}</td>
+            <td>{{ scan.verdict|capitalize }}</td>
+            <td>{{ scan.risk_score }}/100</td>
+            <td>{{ scan.formatted_time() }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No scans yet.</p>
+{% endif %}
+{% endblock %}

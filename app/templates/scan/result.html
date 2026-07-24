@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Scan Result - Dawn Defender{% endblock %}
+{% block content %}
+<div class="result-card verdict-{{ result.verdict }}">
+    <div class="verdict-badge">{{ result.verdict|upper }}</div>
+    <p class="risk-score">Risk score: {{ result.risk_score }}/100</p>
+
+    <p class="scanned-content"><strong>{{ scan_type }} scanned:</strong> {{ content }}</p>
+
+    {% if result.red_flags %}
+    <h3>Red flags</h3>
+    <ul>
+        {% for flag in result.red_flags %}
+        <li>{{ flag }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <h3>Why</h3>
+    <p>{{ result.explanation }}</p>
+
+    <h3>What to do</h3>
+    <p>{{ result.recommendation }}</p>
+
+    <div class="result-actions">
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+        <a href="{{ url_for('scan.history') }}" class="btn btn-secondary">View History</a>
+    </div>
+</div>
+{% endblock %}

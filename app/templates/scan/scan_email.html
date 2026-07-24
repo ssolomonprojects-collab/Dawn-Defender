@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Scan an Email - Dawn Defender{% endblock %}
+{% block content %}
+<div class="form-card">
+    <h2>✉️ Scan an Email</h2>
+    <form method="POST">
+        <label for="text">Paste the email content</label>
+        <textarea id="text" name="text" rows="10" placeholder="Paste the full email text here" required></textarea>
+        <button type="submit" class="btn btn-primary">Scan</button>
+    </form>
+</div>
+{% endblock %}

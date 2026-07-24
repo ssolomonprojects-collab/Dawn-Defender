@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Dawn Defender{% endblock %}
+{% block content %}
+<h1>Welcome, {{ current_user.username }}</h1>
+<p>Choose what you'd like to scan:</p>
+
+<div class="feature-grid">
+    <a href="{{ url_for('scan.scan_url') }}" class="feature-card feature-link">
+        <h3>🔗 Scan a URL</h3>
+        <p>Paste a link to check if it's a phishing attempt.</p>
+    </a>
+    <a href="{{ url_for('scan.scan_sms') }}" class="feature-card feature-link">
+        <h3>💬 Scan an SMS</h3>
+        <p>Paste a text message to check for scam patterns.</p>
+    </a>
+    <a href="{{ url_for('scan.scan_email') }}" class="feature-card feature-link">
+        <h3>✉️ Scan an Email</h3>
+        <p>Paste email content to check for phishing signs.</p>
+    </a>
+</div>
+
+<h2>Recent scans</h2>
+{% if recent_scans %}
+<table class="scan-table">
+    <thead>
+        <tr><th>Type</th><th>Content</th><th>Verdict</th><th>Risk</th><th>When (IST)</th></tr>
+    </thead>
+    <tbody>
+        {% for scan in recent_scans %}
+        <tr class="verdict-row-{{ scan.verdict }}">
+            <td>{{ scan.scan_type|upper }}</td>
+            <td class="truncate">{{ scan.content_preview }}</td>
+            <td>{{ scan.verdict|capitalize }}</td>
+            <td>{{ scan.risk_score }}/100</td>
+            <td>{{ scan.formatted_time() }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No scans yet - try one of the scanners above.</p>
+{% endif %}
+{% endblock %}

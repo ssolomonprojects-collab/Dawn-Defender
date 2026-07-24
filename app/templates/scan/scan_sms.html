@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Scan an SMS - Dawn Defender{% endblock %}
+{% block content %}
+<div class="form-card">
+    <h2>💬 Scan an SMS</h2>
+    <form method="POST">
+        <label for="text">Paste the message</label>
+        <textarea id="text" name="text" rows="6" placeholder="Paste the SMS text here" required></textarea>
+        <button type="submit" class="btn btn-primary">Scan</button>
+    </form>
+</div>
+{% endblock %}
