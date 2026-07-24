@@ -31,13 +31,12 @@ TRUSTED_DOMAINS = {
     "aol.com", "zoho.com", "gmx.com", "mail.com"
 }
 
-CRITICAL_THREAT_PATTERNS = [
-    (r"\b(?:enter|verify|provide|update|submit|restore|confirm)\s+(?:your\s+)?(?:otp|pin|password|cvv|account number|netbanking|aadhaar|pan|atm pin|login|access)\b", "Requests sensitive credentials, login, or personal financial information", 0.75),
-    (r"\b(?:account|access|card|netbanking|services?)\s+(?:has been|will be|is)\s+(?:suspended|blocked|locked|terminated|deactivated|frozen|restricted)\b", "Urgency threat: claims account or card is suspended, blocked, or restricted", 0.75),
-    (r"\b(?:hdfc|sbi|icici|axis|kotak|paytm|paypal|amazon|netflix|apple|microsoft|income tax|epfo|trai|customs)\b.*\b(?:http|www|\.xyz|\.top|\.site|\.click|\.info|\.work|\.com|\.org|\.net)\b", "Impersonates bank, government, or service provider with embedded link", 0.75),
-    (r"\b(?:won|winner|selected for|claimed?|lottery|lucky draw|cash prize)\b.*\b(?:rs\.?\s*\d+|\$\d+|\b\d+\s*lakh\b|\b\d+\s*crore\b|\b\d+\s*thousand\b)\b", "Promises unsolicited money, lottery, or prize rewards", 0.75),
-    (r"\b(?:virus|malware|infected|warrant|arrest|legal action|court|police|cybercrime)\b.*\b(?:pay|call|click|verify)\b", "Scareware threat: claims malware infection or legal action", 0.75),
-    (r"https?://\S+\.(?:xyz|top|click|site|info|work|gq|tk|ml|cf|ga)\S*", "Contains link using high-risk/suspicious domain extension", 0.85),
+PHISHING_PATTERNS = [
+    (r"\b(?:enter|verify|provide|update|submit|restore|confirm|reset)\b.*\b(?:otp|pin|password|cvv|account|netbanking|aadhaar|pan|card|login|access|identity)\b", "Requests sensitive credentials, account verification, or login details", 0.80),
+    (r"\b(?:account|access|card|netbanking|services?)\b.*\b(?:suspended|blocked|locked|terminated|deactivated|frozen|restricted)\b", "Urgency threat: claims account or card is suspended, blocked, or restricted", 0.80),
+    (r"\b(?:hdfc|sbi|icici|axis|kotak|paytm|paypal|amazon|netflix|apple|microsoft|income tax|epfo|trai|customs)\b.*\b(?:http|www|\.xyz|\.top|\.site|\.click|\.info|\.work|\.com|\.org|\.net)\b", "Impersonates bank, government, or service provider with embedded link", 0.85),
+    (r"\b(?:won|winner|selected for|claimed?|lottery|lucky draw|cash prize)\b.*\b(?:rs\.?\s*\d+|\$\d+|\b\d+\s*lakh\b|\b\d+\s*crore\b|\b\d+\s*thousand\b)\b", "Promises unsolicited money, lottery, or prize rewards", 0.85),
+    (r"\b(?:virus|malware|infected|warrant|arrest|legal action|court|police|cybercrime)\b.*\b(?:pay|call|click|verify)\b", "Scareware threat: claims malware infection or legal action", 0.85),
 ]
 
 
@@ -136,57 +135,47 @@ def analyze_email_address(text: str) -> tuple[float, list[str]]:
 
         if tld in SUSPICIOUS_TLDS:
             flags.append(f"Sender email uses high-risk domain extension (.{tld})")
-            confidence += 0.85
+            confidence = max(confidence, 0.90)
 
         for brand in KNOWN_BRANDS:
-            if brand in domain_str:
-                official_domains = {
-                    f"{brand}.com", f"{brand}.in", f"{brand}.co.in", f"{brand}.org",
-                    f"{brand}.net", f"{brand}.gov.in", f"{brand}.ac.in", f"{brand}.us"
-                }
-                if registered_domain not in official_domains:
-                    flags.append(f"Sender email domain ('{domain_str}') is a lookalike/spoof of '{brand}'")
-                    confidence += 0.85
-                    break
-
-        if domain_str.count("-") >= 2:
-            flags.append(f"Sender domain ('{domain_str}') uses multi-hyphen obfuscation")
-            confidence += 0.25
+            if brand in domain_str and registered_domain not in {f"{brand}.com", f"{brand}.in", f"{brand}.co.in", f"{brand}.org"}:
+                flags.append(f"Sender email domain ('{domain_str}') is a lookalike/spoof of '{brand}'")
+                confidence = max(confidence, 0.95)
+                break
 
     confidence = max(0.0, min(1.0, confidence))
     return confidence, flags
 
 
 def analyze_text(text: str) -> dict:
-    critical_flags = []
-    info_flags = []
+    flags = []
     confidence = 0.0
     lowered = text.lower()
 
-    # 1. Email Address / Sender Domain check
+    # 1. Sender Email Address / Domain Spoofing Check
     addr_conf, addr_flags = analyze_email_address(text)
     if addr_flags:
-        critical_flags.extend(addr_flags)
+        flags.extend(addr_flags)
         confidence = max(confidence, addr_conf)
 
-    # 2. Critical Threat Intent Patterns
-    for pattern, description, weight in CRITICAL_THREAT_PATTERNS:
+    # 2. Embedded Link Phishing Analysis (Check every URL in the email)
+    urls = re.findall(r"https?://\S+|www\.\S+|\S+\.(?:xyz|top|site|click|info|work|gq|tk)\S*", text)
+    for u in urls:
+        u_res = analyze_url(u)
+        if u_res["flags"]:
+            for f in u_res["flags"]:
+                flags.append(f"Embedded Link Warning: {f}")
+            confidence = max(confidence, u_res["score_hint"] / 100.0)
+
+    # 3. Phishing Threat Intent Patterns
+    for pattern, description, weight in PHISHING_PATTERNS:
         if re.search(pattern, lowered):
-            critical_flags.append(description)
+            flags.append(description)
             confidence = max(confidence, weight)
 
-    # 3. Informational Flags (only active if critical flags exist or confidence is high)
-    if re.search(r"rs\.?\s*\d+|\$\d+|\b\d+\s*lakh\b|\b\d+\s*crore\b", lowered):
-        info_flags.append("Mentions monetary values or financial transactions")
-
-    urls = re.findall(r"https?://\S+", text)
-
-    all_flags = critical_flags + (info_flags if (critical_flags or confidence >= 0.40) else [])
-    score_hint = int(round(max(0.0, min(1.0, confidence)) * 100)) if critical_flags else 0
-
+    final_score = int(round(max(0.0, min(1.0, confidence)) * 100)) if flags else 0
     return {
-        "flags": all_flags,
-        "critical_flags": critical_flags,
-        "score_hint": score_hint,
+        "flags": flags,
+        "score_hint": final_score,
         "urls_found": urls
     }
