@@ -42,6 +42,8 @@ def scan_url():
         m = url_model.predict(url)
         result = decision.build_verdict("url", h["flags"], h["score_hint"], m["confidence"], m["model_used"])
 
+        print(f"\n[URL SCAN] '{url}' -> Risk: {result['risk_score']} ({result['verdict'].upper()})")
+
         _save_scan("url", url, result)
         return render_template("scan/result.html", result=result, scan_type="URL", content=url)
 
@@ -61,6 +63,8 @@ def scan_sms():
         m = sms_model.predict(text)
         result = decision.build_verdict("sms", h["flags"], h["score_hint"], m["confidence"], m["model_used"])
 
+        print(f"\n[SMS SCAN] '{text[:40]}' -> Risk: {result['risk_score']} ({result['verdict'].upper()})")
+
         _save_scan("sms", text, result)
         return render_template("scan/result.html", result=result, scan_type="SMS", content=text)
 
@@ -79,6 +83,8 @@ def scan_email():
         h = heuristics.analyze_text(text)
         m = email_model.predict(text)
         result = decision.build_verdict("email", h["flags"], h["score_hint"], m["confidence"], m["model_used"])
+
+        print(f"\n[EMAIL SCAN] '{text[:40]}' -> Risk: {result['risk_score']} ({result['verdict'].upper()})")
 
         _save_scan("email", text, result)
         return render_template("scan/result.html", result=result, scan_type="Email", content=text[:200])
