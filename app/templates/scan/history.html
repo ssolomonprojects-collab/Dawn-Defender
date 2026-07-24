@@ -19,13 +19,13 @@
     <tbody>
         {% for scan in scans %}
         <tr class="verdict-row-{{ scan.verdict }}">
-            <td><strong>{{ scan.scan_type|upper }}</strong></td>
-            <td class="truncate">{{ scan.content_preview }}</td>
-            <td>
+            <td data-label="Type"><strong>{{ scan.scan_type|upper }}</strong></td>
+            <td data-label="Content" class="truncate">{{ scan.content_preview }}</td>
+            <td data-label="Verdict">
                 <span class="pill pill-{{ scan.verdict }}">{{ scan.verdict }}</span>
             </td>
-            <td>{{ scan.risk_score }}/100</td>
-            <td>{{ scan.formatted_time() }}</td>
+            <td data-label="Risk Score">{{ scan.risk_score }}/100</td>
+            <td data-label="Date & Time (IST)">{{ scan.formatted_time() }}</td>
         </tr>
         {% endfor %}
     </tbody>

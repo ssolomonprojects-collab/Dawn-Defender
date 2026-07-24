@@ -1,40 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Dawn Defender — AI-powered phishing and scam detection for URLs, SMS, and emails.">
+    <meta name="description"
+        content="Dawn Defender — AI-powered phishing and scam detection for URLs, SMS, and emails.">
     <title>{% block title %}Dawn Defender{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
     <nav class="navbar">
         <a href="{{ url_for('main.index') }}" class="brand">Dawn Defender</a>
+
+        <button class="nav-toggle" aria-label="Toggle menu" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+        </button>
+
         <div class="nav-links">
             {% if current_user.is_authenticated %}
-                <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
-                <a href="{{ url_for('scan.scan_url') }}">URL</a>
-                <a href="{{ url_for('scan.scan_sms') }}">SMS</a>
-                <a href="{{ url_for('scan.scan_email') }}">Email</a>
-                <a href="{{ url_for('scan.history') }}">History</a>
-                <a href="{{ url_for('auth.logout') }}">Logout</a>
+            <a href="{{ url_for('main.dashboard') }}"
+                class="{{ 'active' if request.endpoint == 'main.dashboard' }}">Dashboard</a>
+            <a href="{{ url_for('scan.scan_url') }}"
+                class="{{ 'active' if request.endpoint == 'scan.scan_url' }}">URL</a>
+            <a href="{{ url_for('scan.scan_sms') }}"
+                class="{{ 'active' if request.endpoint == 'scan.scan_sms' }}">SMS</a>
+            <a href="{{ url_for('scan.scan_email') }}"
+                class="{{ 'active' if request.endpoint == 'scan.scan_email' }}">Email</a>
+            <a href="{{ url_for('scan.history') }}"
+                class="{{ 'active' if request.endpoint == 'scan.history' }}">History</a>
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
             {% else %}
-                <a href="{{ url_for('auth.login') }}">Login</a>
-                <a href="{{ url_for('auth.register') }}">Get Started</a>
+            <a href="{{ url_for('auth.login') }}" class="{{ 'active' if request.endpoint == 'auth.login' }}">Login</a>
+            <a href="{{ url_for('auth.register') }}" class="{{ 'active' if request.endpoint == 'auth.register' }}">Get
+                Started</a>
             {% endif %}
         </div>
     </nav>
 
     <main class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash flash-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
         {% endwith %}
 
         {% block content %}{% endblock %}
     </main>
+
+    <footer class="site-footer">
+        <p>Dawn Defender — built for Rush Hour Hackathon, Sathyabama University.</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
+
 </html>
