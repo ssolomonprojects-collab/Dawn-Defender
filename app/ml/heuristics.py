@@ -17,17 +17,25 @@ KNOWN_BRANDS = [
     "axis", "kotak", "paytm", "phonepe", "flipkart", "irctc", "uidai", "zerodha", "chase"
 ]
 
-SCAM_KEYWORDS = [
-    "urgent", "verify now", "act now", "suspended", "click here",
-    "limited time", "your account will be", "immediately", "winner",
-    "claim your", "otp", "password expired", "congratulations",
-    "blocked", "unauthorized", "locked", "deactivated", "expire",
-    "security alert", "action required", "unusual activity", "refund",
-    "lottery", "prize", "won", "free", "cashback", "reward", "lakh",
-    "kyc", "aadhaar", "pan card", "income tax", "epfo", "customs",
-    "delivery failed", "package held", "wire transfer", "payment failed",
-    "dispute", "penalty", "legal action", "disconnection", "trai",
-    "scam", "phishing", "fake", "malware", "virus", "hacked", "compromised"
+TRUSTED_DOMAINS = {
+    "google.com", "youtube.com", "github.com", "wikipedia.org", "amazon.com", "amazon.in",
+    "microsoft.com", "apple.com", "instagram.com", "facebook.com", "twitter.com", "x.com",
+    "linkedin.com", "reddit.com", "netflix.com", "whatsapp.com", "sathyabama.ac.in",
+    "stackoverflow.com", "python.org", "zoom.us", "yahoo.com", "bing.com", "cloudflare.com",
+    "medium.com", "quora.com", "coursera.org", "udemy.com", "w3schools.com", "geeksforgeeks.org",
+    "kaggle.com", "huggingface.co", "pypi.org", "npmjs.com", "sbi.co.in", "hdfcbank.com",
+    "icicibank.com", "axisbank.com", "kotak.com", "paytm.com", "phonepe.com", "flipkart.com",
+    "irctc.co.in", "uidai.gov.in", "incometax.gov.in", "epfindia.gov.in", "openai.com",
+    "steampowered.com", "twitch.tv", "adobe.com", "canva.com", "figma.com", "notion.so"
+}
+
+PHISHING_INTENTS = [
+    (r"\b(?:enter|verify|provide|update|submit)\s+(?:your\s+)?(?:otp|pin|password|cvv|account number|netbanking|aadhaar|pan|atm pin)\b", "Requests sensitive credentials or personal financial information"),
+    (r"\b(?:account|access|card|netbanking|services?)\s+(?:has been|will be|is)\s+(?:suspended|blocked|locked|terminated|deactivated|frozen|restricted)\b", "Urgency threat: claims account or card is suspended, blocked, or restricted"),
+    (r"\b(?:hdfc|sbi|icici|axis|kotak|paytm|paypal|amazon|netflix|apple|microsoft|income tax|epfo|trai|customs)\b.*\b(?:http|www|\.xyz|\.top|\.site|\.click|\.info|\.work)\b", "Impersonates bank, government, or service provider with embedded link"),
+    (r"\b(?:won|winner|selected for|claimed?|lottery|lucky draw|cash prize)\b.*\b(?:rs\.?\s*\d+|\$\d+|\b\d+\s*lakh\b|\b\d+\s*crore\b|\b\d+\s*thousand\b)\b", "Promises unsolicited money, lottery, or prize rewards"),
+    (r"\b(?:virus|malware|infected|warrant|arrest|legal action|court|police|cybercrime)\b.*\b(?:pay|call|click|verify)\b", "Scareware threat: claims malware infection or legal action"),
+    (r"https?://\S+\.(?:xyz|top|click|site|info|work|gq|tk|ml|cf|ga)\S*", "Contains link using high-risk/suspicious domain extension"),
 ]
 
 
@@ -41,6 +49,15 @@ def _levenshtein(a: str, b: str) -> int:
             cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
         prev = cur
     return prev[-1]
+
+
+def is_trusted_domain(url: str) -> bool:
+    try:
+        ext = tldextract.extract(url)
+        registered = ext.registered_domain.lower()
+        return registered in TRUSTED_DOMAINS
+    except Exception:
+        return False
 
 
 def analyze_url(url: str) -> dict:
@@ -110,26 +127,27 @@ def analyze_url(url: str) -> dict:
 
 def analyze_text(text: str) -> dict:
     flags = []
+    confidence = 0.0
     lowered = text.lower()
 
-    matched_keywords = []
-    for word in SCAM_KEYWORDS:
-        if word in lowered:
-            matched_keywords.append(word)
+    for pattern, description in PHISHING_INTENTS:
+        if re.search(pattern, lowered):
+            flags.append(description)
+            confidence += 0.35
 
-    if matched_keywords:
-        sample_words = ", ".join([f'"{w}"' for w in matched_keywords[:3]])
-        flags.append(f"Contains suspicious/urgency keywords: {sample_words}")
+    # Check for general suspicious embedded links
+    urls = re.findall(r"https?://\S+", text)
+    if urls:
+        for url in urls:
+            try:
+                ext = tldextract.extract(url)
+                if ext.suffix in SUSPICIOUS_TLDS and not any("High-risk" in f for f in flags):
+                    flags.append(f"Contains embedded link with high-risk domain extension (.{ext.suffix})")
+                    confidence += 0.40
+                    break
+            except Exception:
+                pass
 
-    urls_found = re.findall(r"https?://\S+|www\.\S+|\S+\.(?:xyz|top|site|click|info|work|gq|tk)\S*", text)
-    if urls_found:
-        flags.append(f"Contains suspicious embedded link: {urls_found[0][:40]}")
-
-    if re.search(r"\b(?:otp|pin|password|cvv|account number|aadhaar|pan)\b", lowered):
-        flags.append("Requests sensitive credentials or personal financial information")
-
-    if re.search(r"rs\.?\s*\d+|\$\d+|\b\d+\s*lakh\b|\b\d+\s*crore\b", lowered):
-        flags.append("Mentions monetary values or financial transactions")
-
-    score_hint = min(95, len(flags) * 25 + len(matched_keywords) * 10)
-    return {"flags": flags, "score_hint": score_hint, "urls_found": urls_found}
+    confidence = max(0.0, min(1.0, confidence))
+    score_hint = int(round(confidence * 100))
+    return {"flags": flags, "score_hint": score_hint, "urls_found": urls}
