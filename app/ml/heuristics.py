@@ -1,5 +1,5 @@
 """
-Fast, deterministic checks for URLs, SMS, and Email text.
+Fast, deterministic checks for URLs, SMS, and Email text / Email addresses.
 Provides heuristic red flags and initial score hints.
 """
 import re
@@ -26,7 +26,9 @@ TRUSTED_DOMAINS = {
     "kaggle.com", "huggingface.co", "pypi.org", "npmjs.com", "sbi.co.in", "hdfcbank.com",
     "icicibank.com", "axisbank.com", "kotak.com", "paytm.com", "phonepe.com", "flipkart.com",
     "irctc.co.in", "uidai.gov.in", "incometax.gov.in", "epfindia.gov.in", "openai.com",
-    "steampowered.com", "twitch.tv", "adobe.com", "canva.com", "figma.com", "notion.so"
+    "steampowered.com", "twitch.tv", "adobe.com", "canva.com", "figma.com", "notion.so",
+    "gmail.com", "outlook.com", "hotmail.com", "icloud.com", "protonmail.com", "proton.me",
+    "aol.com", "zoho.com", "gmx.com", "mail.com"
 }
 
 PHISHING_INTENTS = [
@@ -125,17 +127,69 @@ def analyze_url(url: str) -> dict:
     return {"flags": flags, "score_hint": score_hint}
 
 
+def analyze_email_address(text: str) -> tuple[float, list[str]]:
+    flags = []
+    confidence = 0.0
+
+    email_pattern = r"[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})"
+    matches = re.findall(email_pattern, text)
+
+    if not matches:
+        return 0.0, []
+
+    for domain_str in matches:
+        domain_str = domain_str.lower()
+        try:
+            ext = tldextract.extract(domain_str)
+            registered_domain = ext.registered_domain.lower()
+            tld = ext.suffix.lower()
+        except Exception:
+            continue
+
+        if registered_domain in TRUSTED_DOMAINS:
+            continue
+
+        if tld in SUSPICIOUS_TLDS:
+            flags.append(f"Sender email uses high-risk domain extension (.{tld})")
+            confidence += 0.45
+
+        for brand in KNOWN_BRANDS:
+            if brand in domain_str:
+                official_domains = {
+                    f"{brand}.com", f"{brand}.in", f"{brand}.co.in", f"{brand}.org",
+                    f"{brand}.net", f"{brand}.gov.in", f"{brand}.ac.in", f"{brand}.us"
+                }
+                if registered_domain not in official_domains:
+                    flags.append(f"Sender email domain ('{domain_str}') is a lookalike/spoof of '{brand}'")
+                    confidence += 0.55
+                    break
+
+        if domain_str.count("-") >= 2:
+            flags.append(f"Sender domain ('{domain_str}') uses multi-hyphen obfuscation")
+            confidence += 0.25
+
+    confidence = max(0.0, min(1.0, confidence))
+    return confidence, flags
+
+
 def analyze_text(text: str) -> dict:
     flags = []
     confidence = 0.0
     lowered = text.lower()
 
+    # 1. Analyze Email Address / Sender Domain if present
+    addr_conf, addr_flags = analyze_email_address(text)
+    if addr_flags:
+        flags.extend(addr_flags)
+        confidence += addr_conf
+
+    # 2. Analyze Phishing Intent Patterns
     for pattern, description in PHISHING_INTENTS:
         if re.search(pattern, lowered):
             flags.append(description)
             confidence += 0.35
 
-    # Check for general suspicious embedded links
+    # 3. Analyze Embedded Links
     urls = re.findall(r"https?://\S+", text)
     if urls:
         for url in urls:

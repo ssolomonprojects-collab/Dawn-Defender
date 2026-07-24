@@ -1,8 +1,9 @@
 """
 Smart, flexible loader for trained Email phishing classification models.
-Combines TF-IDF classification with intent-based heuristic analysis.
+Combines TF-IDF classification with intent-based heuristic & sender address analysis.
 """
 import os
+import re
 import warnings
 from app.ml import heuristics
 
@@ -48,6 +49,11 @@ def predict(text: str) -> dict:
 
     h_res = heuristics.analyze_text(clean_text)
     h_score = h_res["score_hint"] / 100.0
+
+    # If input is specifically a sender email address (e.g. user@domain.com or From: user@domain.com)
+    is_email_address_only = bool(re.match(r"^(?:from:\s*)?[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", clean_text.lower()))
+    if is_email_address_only:
+        return {"confidence": float(h_score), "model_used": True}
 
     if not _load_model_if_available():
         return {"confidence": float(h_score), "model_used": True}
