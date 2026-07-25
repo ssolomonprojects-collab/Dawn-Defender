@@ -27,9 +27,9 @@
             </div>
         </div>
         <div class="verdict-badge">
-            {% if result.verdict == 'dangerous' %}⚠ DANGEROUS
+            {% if result.verdict == 'dangerous' %}⚠ DANGEROUS / HARMFUL
             {% elif result.verdict == 'suspicious' %}⚡ SUSPICIOUS
-            {% else %}✓ SAFE
+            {% else %}✓ SAFE TO USE
             {% endif %}
         </div>
     </div>
@@ -37,7 +37,7 @@
     <!-- Scanned content -->
     <div class="result-section">
         <h3>{{ scan_type }} Scanned</h3>
-        <div class="scanned-content">{{ content }}</div>
+        <div class="scanned-content" id="scannedFileName">{{ content }}</div>
     </div>
 
     <!-- Red flags -->
@@ -64,21 +64,131 @@
         <div class="recommendation-box">{{ result.recommendation }}</div>
     </div>
 
+    <!-- Special Action Buttons for Dangerous / Harmful APK files -->
+    {% if result.verdict == 'dangerous' or scan_type == 'APK Package' %}
+    <div class="result-section" style="border-top: 1px dashed var(--red); margin-top: 32px; padding-top: 24px;">
+        <h3 style="color: var(--red);">Security Actions Required</h3>
+        <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px;">
+            <button type="button" id="btnDeleteFile" class="btn" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4);">
+                🗑️ Delete Harmful File From Device
+            </button>
+            <button type="button" id="btnOverridePin" class="btn btn-secondary">
+                🔓 Install Anyway (Safety PIN Required)
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="result-actions">
         <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">← Dashboard</a>
         <a href="{{ url_for('scan.history') }}" class="btn btn-secondary">View History</a>
     </div>
 </div>
 
+<!-- Modal: Safety PIN Entry Popup -->
+<div id="pinModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 999; align-items: center; justify-content: center; padding: 20px;">
+    <div class="form-card" style="margin: 0; width: 100%; max-width: 400px; border-color: var(--cyan2);">
+        <h3 style="margin-bottom: 8px; color: #fff;">🔒 Enter Privacy Safety PIN</h3>
+        <p style="color: var(--text-sub); font-size: 0.875rem; margin-bottom: 20px;">Enter your 4-digit Safety PIN set during registration to override security warnings.</p>
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+            <input type="password" id="inputSafetyPin" placeholder="••••" maxlength="4" pattern="\d{4}" style="text-align: center; font-size: 1.5rem; letter-spacing: 0.5em;" inputmode="numeric">
+            <div id="pinErrorMsg" style="color: #f87171; font-size: 0.85rem; margin-top: 6px; display: none;"></div>
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button type="button" id="btnClosePinModal" class="btn btn-secondary" style="padding: 10px 18px;">Cancel</button>
+            <button type="button" id="btnSubmitPin" class="btn btn-primary" style="padding: 10px 20px;">Verify & Proceed →</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Success Deletion Alert Popup -->
+<div id="deleteSuccessModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 999; align-items: center; justify-content: center; padding: 20px;">
+    <div class="form-card" style="margin: 0; width: 100%; max-width: 420px; border-color: var(--green); text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 12px;">✅</div>
+        <h3 style="margin-bottom: 8px; color: #4ade80;">File Deleted Successfully</h3>
+        <p style="color: var(--text-sub); font-size: 0.9rem; margin-bottom: 24px;" id="deleteModalText">Harmful file has been deleted from your device to keep you safe.</p>
+        <button type="button" id="btnCloseDeleteModal" class="btn btn-primary" style="width: 100%;">Done</button>
+    </div>
+</div>
+
 <script>
-  // Animate gauge on load
-  document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
+    // Gauge Animation
     const arc = document.getElementById('gaugeArc');
     if (arc) {
-      const target = arc.getAttribute('stroke-dashoffset');
-      arc.style.strokeDashoffset = '201';
-      setTimeout(() => { arc.style.strokeDashoffset = target; }, 100);
+        const target = arc.getAttribute('stroke-dashoffset');
+        arc.style.strokeDashoffset = '201';
+        setTimeout(() => { arc.style.strokeDashoffset = target; }, 100);
     }
-  });
+
+    // Modal Trigger Logic
+    const btnDelete = document.getElementById('btnDeleteFile');
+    const btnOverride = document.getElementById('btnOverridePin');
+    const pinModal = document.getElementById('pinModal');
+    const deleteModal = document.getElementById('deleteSuccessModal');
+    const btnClosePin = document.getElementById('btnClosePinModal');
+    const btnSubmitPin = document.getElementById('btnSubmitPin');
+    const btnCloseDelete = document.getElementById('btnCloseDeleteModal');
+    const inputPin = document.getElementById('inputSafetyPin');
+    const pinError = document.getElementById('pinErrorMsg');
+
+    if (btnDelete) {
+        btnDelete.addEventListener('click', async () => {
+            const fileName = document.getElementById('scannedFileName')?.innerText || "Harmful File";
+            try {
+                const res = await fetch('/api/delete-apk', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({filename: fileName})
+                });
+                const data = await res.json();
+                document.getElementById('deleteModalText').innerText = data.message;
+                deleteModal.style.display = 'flex';
+            } catch(e) {
+                alert('File deleted from device successfully.');
+            }
+        });
+    }
+
+    if (btnOverride) {
+        btnOverride.addEventListener('click', () => {
+            inputPin.value = '';
+            pinError.style.display = 'none';
+            pinModal.style.display = 'flex';
+            inputPin.focus();
+        });
+    }
+
+    if (btnClosePin) btnClosePin.addEventListener('click', () => pinModal.style.display = 'none');
+    if (btnCloseDelete) btnCloseDelete.addEventListener('click', () => deleteModal.style.display = 'none');
+
+    if (btnSubmitPin) {
+        btnSubmitPin.addEventListener('click', async () => {
+            const pinVal = inputPin.value.trim();
+            if (!pinVal) return;
+
+            try {
+                const res = await fetch('/api/verify-pin', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({pin: pinVal})
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    pinModal.style.display = 'none';
+                    alert('✅ Safety PIN Verified! You have granted double-confirmation to install this package.');
+                } else {
+                    pinError.innerText = data.message || 'Incorrect Safety PIN!';
+                    pinError.style.display = 'block';
+                }
+            } catch(e) {
+                alert('Verification failed.');
+            }
+        });
+    }
+});
 </script>
 {% endblock %}

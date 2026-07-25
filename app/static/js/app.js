@@ -1,5 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // Register PWA Service Worker for Chrome Android App mode
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/sw.js')
+            .then(reg => console.log('[PWA] Service worker registered successfully.'))
+            .catch(err => console.log('[PWA] Service worker registration error:', err));
+    }
+
     // Mobile nav toggle
     const navToggle = document.querySelector('.nav-toggle');
     const navLinks = document.querySelector('.nav-links');
@@ -13,9 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Show a loading state on the submit button while a scan runs -
-    // scans hit the ML model + heuristics and can take a couple seconds,
-    // so this avoids the "did my click even register?" moment.
+    // Submit button loading animation
     document.querySelectorAll('form').forEach(form => {
         form.addEventListener('submit', () => {
             const btn = form.querySelector('button[type="submit"]');
@@ -25,4 +30,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Live Web File Access & Automatic APK Download Inspector
+    const liveApkInput = document.getElementById('liveApkPicker');
+    if (liveApkInput) {
+        liveApkInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                const apkFile = files[0];
+                if (apkFile.name.endsWith('.apk')) {
+                    const form = liveApkInput.closest('form');
+                    if (form) form.submit();
+                }
+            }
+        });
+    }
 });

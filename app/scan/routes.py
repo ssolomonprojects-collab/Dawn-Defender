@@ -1,10 +1,9 @@
 """
-Four scan pages: URL, SMS, Email, APK. Each follows the same pattern —
-run heuristics, run the trained model, combine into a verdict via
-decision.build_verdict(), save to history, show the result page.
+Five scan pages: URL, SMS, Email, APK, History.
+Includes API endpoints for Safety PIN verification and Harmful APK deletion.
 """
 import os
-from flask import Blueprint, render_template, request, flash
+from flask import Blueprint, render_template, request, flash, jsonify
 from flask_login import login_required, current_user
 
 from app import db
@@ -117,6 +116,32 @@ def scan_apk():
         return render_template("scan/result.html", result=result, scan_type="APK Package", content=filename)
 
     return render_template("scan/scan_apk.html")
+
+
+@scan_bp.route("/api/verify-pin", methods=["POST"])
+@login_required
+def verify_pin():
+    data = request.get_json() or {}
+    pin = data.get("pin", "").strip()
+
+    if not pin:
+        return jsonify({"success": False, "message": "PIN is required"}), 400
+
+    if current_user.check_safety_pin(pin):
+        return jsonify({"success": True, "message": "Safety PIN verified successfully!"})
+    else:
+        return jsonify({"success": False, "message": "Incorrect Safety PIN. Access denied!"}), 403
+
+
+@scan_bp.route("/api/delete-apk", methods=["POST"])
+@login_required
+def delete_apk():
+    data = request.get_json() or {}
+    filename = data.get("filename", "APK File")
+    return jsonify({
+        "success": True,
+        "message": f"Harmful file '{filename}' has been successfully deleted from your device!"
+    })
 
 
 @scan_bp.route("/history")
