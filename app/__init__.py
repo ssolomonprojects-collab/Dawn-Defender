@@ -1,6 +1,7 @@
 """
 App factory. Creates the Flask app, sets up the database, login manager,
 and registers each feature as its own blueprint (auth, main, scan).
+Production deployment ready for Render, Railway, PythonAnywhere, or Vercel.
 """
 import os
 from flask import Flask
@@ -15,11 +16,20 @@ def create_app():
     app = Flask(__name__)
 
     basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-this")
-    db_path = os.path.join(basedir, "instance", "dawn_defender.db")
-    if not os.path.exists(db_path) and os.path.exists(os.path.join(basedir, "instance", "sentinel.db")):
-        db_path = os.path.join(basedir, "instance", "sentinel.db")
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + db_path
+    app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-dawn-defender-hackathon-2026")
+    
+    # 1. Database URI configuration (Supports Cloud PostgreSQL & Local SQLite)
+    db_uri = os.environ.get("DATABASE_URL")
+    if db_uri:
+        if db_uri.startswith("postgres://"):
+            db_uri = db_uri.replace("postgres://", "postgresql://", 1)
+        app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
+    else:
+        db_path = os.path.join(basedir, "instance", "dawn_defender.db")
+        if not os.path.exists(db_path) and os.path.exists(os.path.join(basedir, "instance", "sentinel.db")):
+            db_path = os.path.join(basedir, "instance", "sentinel.db")
+        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + db_path
+
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["UPLOAD_FOLDER"] = os.path.join(basedir, "app", "static", "uploads")
     app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB max upload

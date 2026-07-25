@@ -10,4 +10,4 @@ pandas
 tldextract
 beautifulsoup4
 lxml
-
+gunicorn
