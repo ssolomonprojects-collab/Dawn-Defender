@@ -1,17 +1,17 @@
 {% extends "base.html" %}
-{% block title %}SMS Scanner — Dawn Defender{% endblock %}
+{% block title %}Text Message Shield — Dawn Defender{% endblock %}
 {% block content %}
 
 <div class="scan-header">
-    <h1>💬 SMS Scam Scanner</h1>
-    <p>Paste a suspicious text message or SMS notice — AI checks for urgency pressure, fake reward traps, and OTP harvesting patterns.</p>
+    <h1>💬 Text Message Scam Shield</h1>
+    <p>Paste any suspicious text message to check for fake delivery alerts, urgent bank traps, or secret code traps.</p>
 </div>
 
 <div class="scan-card">
     <form method="POST">
-        <label for="text">SMS Message Text</label>
-        <textarea id="text" name="text" rows="6" placeholder="Paste the suspicious SMS here...&#10;&#10;e.g. Your electricity bill of Rs.3,200 is overdue. Pay immediately to prevent disconnection: http://..." required></textarea>
-        <button type="submit" class="btn btn-primary">Analyze Message →</button>
+        <label for="text">Paste Text Message Content</label>
+        <textarea id="text" name="text" rows="6" placeholder="Paste message text here...&#10;&#10;e.g. Your electricity bill of Rs.3,200 is overdue. Pay immediately to prevent disconnection: http://..." required></textarea>
+        <button type="submit" class="btn btn-primary">Check Message Safety →</button>
     </form>
 </div>
 

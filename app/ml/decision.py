@@ -1,30 +1,34 @@
 """
-Combines heuristic flags + trained model confidence into the final
-risk_score / verdict / explanation / recommendation shown to the user.
+Combines security checks + AI confidence into a plain-English verdict.
 """
 
 EXPLANATIONS = {
     "url": {
-        "dangerous": "This link shows strong signs of being a phishing attempt. It may be trying to steal your login details or personal information.",
-        "suspicious": "This link has some warning signs. It might be legitimate, but proceed carefully.",
-        "safe": "This link doesn't show any common phishing indicators.",
+        "dangerous": "This website link shows strong signs of a scam or phishing trap designed to steal your passwords or banking details.",
+        "suspicious": "This link has some warning signs. It might be safe, but verify before entering any personal information.",
+        "safe": "This link appears clean and free of common phishing or scam indicators.",
     },
     "sms": {
-        "dangerous": "This message has strong characteristics of a scam — likely trying to pressure you into acting quickly or clicking a malicious link.",
-        "suspicious": "This message has warning signs typical of spam or scam texts.",
-        "safe": "This message doesn't show common scam/spam patterns.",
+        "dangerous": "This message is a scam attempt designed to pressure you into revealing passwords, OTP codes, or clicking dangerous links.",
+        "suspicious": "This text message contains warning signs common in unwanted or spam messages.",
+        "safe": "This message does not show common scam or fraud patterns.",
     },
     "email": {
-        "dangerous": "This email shows strong signs of phishing — it may be impersonating a real company or bank to steal sensitive information.",
-        "suspicious": "This email has red flags. Double-check the sender before trusting it.",
-        "safe": "This email doesn't show common phishing indicators.",
+        "dangerous": "This email shows strong signs of phishing — it impersonates an official company or bank to steal sensitive data.",
+        "suspicious": "This email contains suspicious elements. Double check the sender address before trusting it.",
+        "safe": "This email appears safe and shows no common scam indicators.",
+    },
+    "apk": {
+        "dangerous": "This app file requests dangerous phone permissions (such as controlling your screen, installing software, or reading private texts) and is unsafe to install.",
+        "suspicious": "This app file has some warning flags. Review permissions carefully before installing.",
+        "safe": "This app file appears safe and requests no dangerous hidden permissions.",
     },
 }
 
 RECOMMENDATIONS = {
-    "dangerous": "Do not click, reply, or enter any information. Delete or report this immediately.",
-    "suspicious": "Verify through an official source before trusting this — don't act on it directly.",
-    "safe": "No immediate threat detected, but always stay alert for unexpected requests.",
+    "dangerous": "Do not click links, reply, or enter any personal details. Delete or block this immediately.",
+    "suspicious": "Verify the sender through an official phone number or website before trusting this.",
+    "safe": "No threat detected, but always stay cautious with unexpected requests.",
 }
 
 
@@ -38,12 +42,7 @@ def _verdict_from_score(score: int) -> str:
 
 def build_verdict(scan_type: str, flags: list, heuristic_score_hint: int,
                    model_confidence: float = 0.0, model_used: bool = False) -> dict:
-    """
-    flags: list of human-readable red flag strings from heuristics
-    heuristic_score_hint: 0-100 rough score from rule-based checks
-    model_confidence: 0.0-1.0 from the trained model
-    model_used: whether a real trained model produced model_confidence
-    """
+
     if model_used:
         model_score = int(round(model_confidence * 100))
         combined_score = max(model_score, heuristic_score_hint)
@@ -55,17 +54,17 @@ def build_verdict(scan_type: str, flags: list, heuristic_score_hint: int,
 
     if not flags:
         if verdict == "dangerous":
-            flags = ["Flagged by AI model as a high-probability scam/phishing attempt"]
+            flags = ["Flagged by AI security engine as a high-risk scam attempt"]
         elif verdict == "suspicious":
-            flags = ["Flagged by AI model as suspicious content"]
+            flags = ["Flagged by AI security engine as suspicious content"]
         else:
-            flags = ["No specific red flags detected"]
+            flags = ["No security threats detected"]
 
     return {
         "risk_score": combined_score,
         "verdict": verdict,
         "red_flags": flags,
-        "explanation": EXPLANATIONS[scan_type][verdict],
+        "explanation": EXPLANATIONS.get(scan_type, EXPLANATIONS["url"])[verdict],
         "recommendation": RECOMMENDATIONS[verdict],
         "requires_confirmation": verdict != "safe",
     }

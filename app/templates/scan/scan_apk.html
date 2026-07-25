@@ -1,23 +1,23 @@
 {% extends "base.html" %}
-{% block title %}APK Inspector — Dawn Defender{% endblock %}
+{% block title %}App File Inspector — Dawn Defender{% endblock %}
 {% block content %}
 
 <div class="scan-header">
-    <h1>📱 APK Package Inspector</h1>
-    <p>Upload an Android <code>.apk</code> installer file or test a filename. Our analyzer inspects manifest permissions, signatures, accessibility hooks, and autostart risks before installation.</p>
+    <h1>📱 Phone App Safety Inspector</h1>
+    <p>Upload a downloaded phone app file to inspect its hidden permissions and verify whether it's safe to install on your phone.</p>
 </div>
 
 <div class="scan-card">
     <form method="POST" enctype="multipart/form-data">
         <div class="form-group">
-            <label for="apk_file">Upload APK File (.apk)</label>
+            <label for="apk_file">Select App File (.apk)</label>
             <input type="file" id="apk_file" name="apk_file" accept=".apk">
         </div>
         <div class="form-group">
-            <label for="filename">Or Enter APK Filename / Package Name</label>
-            <input type="text" id="filename" name="filename" placeholder="e.g. mod_bank_update_v2.apk">
+            <label for="filename">Or Enter App File Name</label>
+            <input type="text" id="filename" name="filename" placeholder="e.g. Free_Bank_Rewards_v2.apk">
         </div>
-        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Inspect APK Permissions →</button>
+        <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Check App Safety →</button>
     </form>
 </div>
 
