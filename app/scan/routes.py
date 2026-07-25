@@ -1,5 +1,5 @@
 """
-Three scan pages: URL, SMS, Email. Each follows the same pattern —
+Four scan pages: URL, SMS, Email, APK. Each follows the same pattern —
 run heuristics, run the trained model, combine into a verdict via
 decision.build_verdict(), save to history, show the result page.
 """
@@ -9,7 +9,7 @@ from flask_login import login_required, current_user
 
 from app import db
 from app.models import ScanHistory
-from app.ml import heuristics, decision, url_model, sms_model, email_model
+from app.ml import heuristics, decision, url_model, sms_model, email_model, apk_model
 
 scan_bp = Blueprint("scan", __name__)
 
@@ -90,6 +90,33 @@ def scan_email():
         return render_template("scan/result.html", result=result, scan_type="Email", content=text[:200])
 
     return render_template("scan/scan_email.html")
+
+
+@scan_bp.route("/scan/apk", methods=["GET", "POST"])
+@login_required
+def scan_apk():
+    if request.method == "POST":
+        file = request.files.get("apk_file")
+        filename = request.form.get("filename", "").strip()
+
+        if file and file.filename.endswith(".apk"):
+            file_bytes = file.read()
+            filename = file.filename
+        elif filename:
+            file_bytes = b""
+        else:
+            flash("Please upload an .apk file or enter an APK filename.", "error")
+            return render_template("scan/scan_apk.html")
+
+        m = apk_model.analyze_apk_bytes(file_bytes, filename)
+        result = decision.build_verdict("apk", m["flags"], int(m["confidence"] * 100), m["confidence"], True)
+
+        print(f"\n[APK SCAN] '{filename}' -> Risk: {result['risk_score']} ({result['verdict'].upper()})")
+
+        _save_scan("apk", filename, result)
+        return render_template("scan/result.html", result=result, scan_type="APK Package", content=filename)
+
+    return render_template("scan/scan_apk.html")
 
 
 @scan_bp.route("/history")
