@@ -1,7 +1,7 @@
 """
 App factory. Creates the Flask app, sets up the database, login manager,
 and registers each feature as its own blueprint (auth, main, scan).
-Production deployment ready for Render, Railway, PythonAnywhere, or Vercel.
+Production deployment ready for Vercel, Supabase PostgreSQL, Render, and Railway.
 """
 import os
 from flask import Flask
@@ -18,8 +18,8 @@ def create_app():
     basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-dawn-defender-hackathon-2026")
     
-    # 1. Database URI configuration (Supports Cloud PostgreSQL & Local SQLite)
-    db_uri = os.environ.get("DATABASE_URL")
+    # 1. Database URI configuration (Supports Supabase PostgreSQL & Environment Variables)
+    db_uri = os.environ.get("DATABASE_URL") or os.environ.get("SUPABASE_DB_URL")
     if db_uri:
         if db_uri.startswith("postgres://"):
             db_uri = db_uri.replace("postgres://", "postgresql://", 1)
@@ -65,6 +65,9 @@ def create_app():
         return response
 
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as e:
+            print(f"Database table initialization notice: {e}")
 
     return app
