@@ -9,7 +9,17 @@ This project is an AI-powered cybersecurity web application that helps users ide
 
 ?? Team Details
 Team Name: Golden Dawn
-Name    RoleSrirangarajan UMachine Learning Solomon SFrontend DevelopmentKalaicharan S (Leader)Backend DevelopmentJeyanthan SDocumentation & Testing
+Name
+    Role
+Srirangarajan U
+Machine Learning 
+Solomon S
+Frontend Development
+Kalaicharan S (Leader)
+Backend Development
+Jeyanthan S
+Documentation & Testing
+
 
 Hackathon/Event: Rush Hour 24
 Institution: Sathyabama University
@@ -50,29 +60,67 @@ By combining multiple threat detection capabilities into a single platform, the 
 ??? Complete Tech Stack
 Our project combines modern web technologies with Machine Learning to provide an intelligent cybersecurity solution for detecting Spam SMS, Spam Emails, and Phishing URLs.
 Frontend
-HTML5Structure and layout of web pagesCSS3Styling, animations, and responsive designJavaScript (ES6)Client-side interactivity and form validation
+HTML5
+Structure and layout of web pages
+CSS3
+Styling, animations, and responsive design
+JavaScript (ES6)
+Client-side interactivity and form validation
+
 
 Backend
-Python 3.xCore programming languageFlaskWeb framework for handling routes, requests, and model integration
+Python 3.x
+Core programming language
+Flask
+Web framework for handling routes, requests, and model integration
+
 
 Machine Learning
-Scikit-learnTraining and deploying Machine Learning modelsPandasData preprocessing and dataset manipulationNumPyNumerical computations and array operationsJoblib / PickleSaving and loading trained ML models
+Scikit-learn
+Training and deploying Machine Learning models
+Pandas
+Data preprocessing and dataset manipulation
+NumPy
+Numerical computations and array operations
+Joblib / Pickle
+Saving and loading trained ML models
+
 
 AI Models
-Spam SMS Detection ModelTrained using Google ColabSpam Email Detection ModelTrained using Google ColabPhishing URL Detection ModelTrained using Google Colab
+Spam SMS Detection Model
+Trained using Google Colab
+Spam Email Detection Model
+Trained using Google Colab
+Phishing URL Detection Model
+Trained using Google Colab
+
 Datasets
-Spam SMS DatasetDownloaded from KaggleSpam Email DatasetDownloaded from KagglePhishing URL DatasetDownloaded from Kaggle
+Spam SMS Dataset
+Downloaded from Kaggle
+Spam Email Dataset
+Downloaded from Kaggle
+Phishing URL Dataset
+Downloaded from Kaggle
+
 Development Environment
-Visual Studio CodeSource code editorGoogle ColabModel training and experimentationGitVersion controlGitHubSource code hosting and collaboration??? System Architecture Diagram
+Visual Studio Code
+Source code editor
+Google Colab
+Model training and experimentation
+Git
+Version control
+GitHub
+Source code hosting and collaboration
+??? System Architecture Diagram
 
 ?? Detailed Workflow
 The AI-Powered Spam SMS, Spam Email, and Phishing URL Detection System follows a structured workflow to analyse user input and provide accurate predictions in real time. The workflow consists of data collection, model training, user interaction, input processing, prediction, and result generation.
 
 1. Dataset Collection
 The project begins with collecting publicly available datasets for training the Machine Learning models.
-* Spam SMS Dataset – Contains labelled SMS messages classified as Spam or Legitimate.
-* Spam Email Dataset – Contains labelled email messages classified as Spam or Legitimate.
-* Phishing URL Dataset – Contains labelled URLs classified as Phishing or Safe.
+* Spam SMS Dataset â€“ Contains labelled SMS messages classified as Spam or Legitimate.
+* Spam Email Dataset â€“ Contains labelled email messages classified as Spam or Legitimate.
+* Phishing URL Dataset â€“ Contains labelled URLs classified as Phishing or Safe.
 These datasets serve as the foundation for training the AI models.
 
 2. Data Preprocessing
