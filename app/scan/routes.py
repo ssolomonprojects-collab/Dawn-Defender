@@ -14,18 +14,22 @@ scan_bp = Blueprint("scan", __name__)
 
 
 def _save_scan(scan_type, content_preview, result):
-    record = ScanHistory(
-        user_id=current_user.id,
-        scan_type=scan_type,
-        content_preview=content_preview[:300],
-        risk_score=result["risk_score"],
-        verdict=result["verdict"],
-        red_flags="||".join(result["red_flags"]),
-        explanation=result["explanation"],
-        recommendation=result["recommendation"],
-    )
-    db.session.add(record)
-    db.session.commit()
+    try:
+        record = ScanHistory(
+            user_id=current_user.id,
+            scan_type=scan_type,
+            content_preview=content_preview[:300],
+            risk_score=result["risk_score"],
+            verdict=result["verdict"],
+            red_flags="||".join(result["red_flags"]),
+            explanation=result["explanation"],
+            recommendation=result["recommendation"],
+        )
+        db.session.add(record)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Notice saving scan history: {e}")
 
 
 @scan_bp.route("/scan/url", methods=["GET", "POST"])
@@ -40,8 +44,6 @@ def scan_url():
         h = heuristics.analyze_url(url)
         m = url_model.predict(url)
         result = decision.build_verdict("url", h["flags"], h["score_hint"], m["confidence"], m["model_used"])
-
-        print(f"\n[URL SCAN] '{url}' -> Risk: {result['risk_score']} ({result['verdict'].upper()})")
 
         _save_scan("url", url, result)
         return render_template("scan/result.html", result=result, scan_type="URL", content=url)
@@ -62,8 +64,6 @@ def scan_sms():
         m = sms_model.predict(text)
         result = decision.build_verdict("sms", h["flags"], h["score_hint"], m["confidence"], m["model_used"])
 
-        print(f"\n[SMS SCAN] '{text[:40]}' -> Risk: {result['risk_score']} ({result['verdict'].upper()})")
-
         _save_scan("sms", text, result)
         return render_template("scan/result.html", result=result, scan_type="SMS", content=text)
 
@@ -82,8 +82,6 @@ def scan_email():
         h = heuristics.analyze_text(text)
         m = email_model.predict(text)
         result = decision.build_verdict("email", h["flags"], h["score_hint"], m["confidence"], m["model_used"])
-
-        print(f"\n[EMAIL SCAN] '{text[:40]}' -> Risk: {result['risk_score']} ({result['verdict'].upper()})")
 
         _save_scan("email", text, result)
         return render_template("scan/result.html", result=result, scan_type="Email", content=text[:200])
@@ -109,8 +107,6 @@ def scan_apk():
 
         m = apk_model.analyze_apk_bytes(file_bytes, filename)
         result = decision.build_verdict("apk", m["flags"], int(m["confidence"] * 100), m["confidence"], True)
-
-        print(f"\n[APK SCAN] '{filename}' -> Risk: {result['risk_score']} ({result['verdict'].upper()})")
 
         _save_scan("apk", filename, result)
         return render_template("scan/result.html", result=result, scan_type="APK Package", content=filename)
@@ -147,9 +143,13 @@ def delete_apk():
 @scan_bp.route("/history")
 @login_required
 def history():
-    scans = (
-        ScanHistory.query.filter_by(user_id=current_user.id)
-        .order_by(ScanHistory.created_at.desc())
-        .all()
-    )
+    try:
+        scans = (
+            ScanHistory.query.filter_by(user_id=current_user.id)
+            .order_by(ScanHistory.created_at.desc())
+            .all()
+        )
+    except Exception as e:
+        print(f"Notice querying scan history: {e}")
+        scans = []
     return render_template("scan/history.html", scans=scans)
