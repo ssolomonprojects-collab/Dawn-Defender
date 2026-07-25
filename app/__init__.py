@@ -18,17 +18,20 @@ def create_app():
     basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-dawn-defender-hackathon-2026")
     
-    # 1. Database URI configuration (Supports Supabase PostgreSQL & Environment Variables)
+    # 1. Database URI configuration (Supports Supabase PostgreSQL & Safe Vercel /tmp Fallback)
     db_uri = os.environ.get("DATABASE_URL") or os.environ.get("SUPABASE_DB_URL")
-    if db_uri:
+    if db_uri and "[YOUR-PASSWORD]" not in db_uri and "YOUR-PASSWORD" not in db_uri:
         if db_uri.startswith("postgres://"):
             db_uri = db_uri.replace("postgres://", "postgresql://", 1)
         app.config["SQLALCHEMY_DATABASE_URI"] = db_uri
     else:
-        db_path = os.path.join(basedir, "instance", "dawn_defender.db")
-        if not os.path.exists(db_path) and os.path.exists(os.path.join(basedir, "instance", "sentinel.db")):
-            db_path = os.path.join(basedir, "instance", "sentinel.db")
-        app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + db_path
+        if os.getenv("VERCEL"):
+            app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/dawn_defender.db"
+        else:
+            db_path = os.path.join(basedir, "instance", "dawn_defender.db")
+            if not os.path.exists(db_path) and os.path.exists(os.path.join(basedir, "instance", "sentinel.db")):
+                db_path = os.path.join(basedir, "instance", "sentinel.db")
+            app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + db_path
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     
