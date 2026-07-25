@@ -1,7 +1,7 @@
 """
 Registration collects essentials: username, email, password, and 4-digit Safety PIN.
 """
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, login_required, current_user
 
 from app import db
@@ -46,7 +46,9 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        login_user(user)
+        # remember=True writes a persistent cookie so the session survives page navigations on HTTPS
+        login_user(user, remember=True)
+        session.permanent = True
         flash("Account created with Privacy Safety PIN enabled. Welcome to Dawn Defender.", "success")
         return redirect(url_for("main.dashboard"))
 
@@ -67,7 +69,9 @@ def login():
         ).first()
 
         if user and user.check_password(password):
-            login_user(user)
+            # remember=True writes a persistent cookie so the session survives page navigations on HTTPS
+            login_user(user, remember=True)
+            session.permanent = True
             next_page = request.args.get("next")
             return redirect(next_page or url_for("main.dashboard"))
 

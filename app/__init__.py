@@ -7,6 +7,7 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from datetime import timedelta
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -17,6 +18,19 @@ def create_app():
 
     basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-dawn-defender-hackathon-2026")
+    
+    # Session cookie security settings
+    # Detect production: a real SECRET_KEY env var will be set on Vercel/Render/Railway
+    is_production = bool(os.environ.get("SECRET_KEY"))
+    app.config["SESSION_COOKIE_SECURE"] = is_production       # HTTPS only in production
+    app.config["SESSION_COOKIE_HTTPONLY"] = True               # No JS access to cookie
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"             # Works across normal page navigations
+    app.config["SESSION_COOKIE_NAME"] = "dawn_defender_session"
+    app.config["SESSION_PERMANENT"] = True                     # Sessions are permanent by default
+    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)  # Stay logged in for 7 days
+    app.config["REMEMBER_COOKIE_DURATION"] = timedelta(days=7)
+    app.config["REMEMBER_COOKIE_SECURE"] = is_production
+    app.config["REMEMBER_COOKIE_HTTPONLY"] = True
     
     # 1. Database URI configuration (Supports Supabase PostgreSQL & Safe Vercel /tmp Fallback)
     db_uri = os.environ.get("DATABASE_URL") or os.environ.get("SUPABASE_DB_URL")
@@ -73,9 +87,11 @@ def create_app():
 
     @app.after_request
     def add_no_cache_headers(response):
-        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0"
-        response.headers["Pragma"] = "no-cache"
-        response.headers["Expires"] = "-1"
+        # Only set no-cache for pages, not for files or assets
+        if response.content_type.startswith("text/html"):
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
         return response
 
     with app.app_context():
