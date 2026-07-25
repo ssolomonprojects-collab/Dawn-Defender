@@ -65,6 +65,5 @@ feature_names.pkl
 label_encoder.pkl
 feature_extractor.py
 app.py
-index.html
 scipy-*.whl
 ada92cb5*.pyd

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Dawn Defender — Smart Protection Against Scams & Fake Apps{% endblock %}
+{% block content %}
+
+<div class="hero">
+    <div class="hero-badge">AI-Powered Protection · Real-Time Security</div>
+    <h1>Stop Online Scams & Fake Apps<br>Before They Reach You</h1>
+    <p>Dawn Defender uses smart AI to instantly catch fake website links, scam text messages, phishing emails, and dangerous phone apps — explained in simple, plain language.</p>
+    <div class="hero-actions">
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Get Started Free →</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Sign In</a>
+    </div>
+</div>
+
+<div class="feature-grid">
+    <div class="feature-card">
+        <div class="feature-icon icon-url">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+        </div>
+        <h3>Link Checker</h3>
+        <p>Paste any web link to instantly check if it leads to a real website or a fake scam page trying to steal your bank details.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon icon-sms">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+        </div>
+        <h3>Text Message Shield</h3>
+        <p>Check suspicious text messages for fake delivery alerts, urgent bank traps, and secret OTP stealing attempts.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon icon-email">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+            </svg>
+        </div>
+        <h3>Email Safety Check</h3>
+        <p>Verify if an email is truly from your bank or an official company, or a fraudster pretending to be them.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon icon-apk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="3" ry="3"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+        </div>
+        <h3>App File Inspector</h3>
+        <p>Automatically scans downloaded phone app files to make sure they won't spy on your screen or steal private photos.</p>
+    </div>
+</div>
+
+{% endblock %}
