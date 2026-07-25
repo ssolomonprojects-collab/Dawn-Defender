@@ -3,33 +3,60 @@
 {% block content %}
 
 <h1>Welcome back, {{ current_user.username }} 👋</h1>
-<p class="welcome-text">Choose a scanner below to check suspicious content.</p>
+<p class="welcome-text">Select a scanner below to check suspicious links, messages, emails, or phone app files.</p>
 
 <div class="feature-grid">
     <a href="{{ url_for('scan.scan_url') }}" class="feature-card feature-link">
-        <h3>🔗 URL Scanner</h3>
-        <p>Check if a link is a phishing attempt using 79-feature ML analysis.</p>
+        <div class="feature-icon icon-url">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+        </div>
+        <h3>Link Checker</h3>
+        <p>Check if a website link is a dangerous scam or phishing attempt.</p>
     </a>
     <a href="{{ url_for('scan.scan_sms') }}" class="feature-card feature-link">
-        <h3>💬 SMS Scanner</h3>
-        <p>Detect scam text messages and urgency-based social engineering.</p>
+        <div class="feature-icon icon-sms">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+        </div>
+        <h3>Text Message Shield</h3>
+        <p>Detect scam text messages, fake delivery alerts, and bank traps.</p>
     </a>
     <a href="{{ url_for('scan.scan_email') }}" class="feature-card feature-link">
-        <h3>✉️ Email Scanner</h3>
-        <p>Identify phishing emails impersonating banks, services, and government bodies.</p>
+        <div class="feature-icon icon-email">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+            </svg>
+        </div>
+        <h3>Email Safety Check</h3>
+        <p>Identify fake emails pretending to be your bank or official services.</p>
+    </a>
+    <a href="{{ url_for('scan.scan_apk') }}" class="feature-card feature-link">
+        <div class="feature-icon icon-apk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="3" ry="3"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+        </div>
+        <h3>App File Inspector</h3>
+        <p>Inspect downloaded phone app files for dangerous hidden permissions.</p>
     </a>
 </div>
 
-<h2>Recent Scans</h2>
+<h2 style="margin-top: 40px;">Recent Security Scans</h2>
 {% if recent_scans %}
 <table class="scan-table">
     <thead>
         <tr>
             <th>Type</th>
-            <th>Content</th>
+            <th>Content Preview</th>
             <th>Verdict</th>
-            <th>Risk</th>
-            <th>When (IST)</th>
+            <th>Risk Score</th>
+            <th>Date & Time</th>
         </tr>
     </thead>
     <tbody>
@@ -40,15 +67,15 @@
             <td data-label="Verdict">
                 <span class="pill pill-{{ scan.verdict }}">{{ scan.verdict }}</span>
             </td>
-            <td data-label="Risk">{{ scan.risk_score }}/100</td>
-            <td data-label="When (IST)">{{ scan.formatted_time() }}</td>
+            <td data-label="Risk Score">{{ scan.risk_score }}/100</td>
+            <td data-label="Date & Time">{{ scan.formatted_time() }}</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 {% else %}
 <div class="empty-state">
-    <p>No scans yet — try one of the scanners above!</p>
+    <p>No security scans yet — try one of the smart scanners above!</p>
 </div>
 {% endif %}
 

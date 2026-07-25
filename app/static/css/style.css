@@ -32,7 +32,7 @@
   --transition: 0.25s cubic-bezier(.4, 0, .2, 1);
 }
 
-/* ── RESET ─────────────────────────────────────────────────── */
+/* ── RESET & TEXT DECORATION CLEANUP ────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -41,6 +41,10 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+a, a:hover, a:focus, .feature-link, .feature-link *, .brand, .nav-links a {
+  text-decoration: none !important;
 }
 
 body {
@@ -107,7 +111,7 @@ textarea:focus-visible {
   font-size: 1.25rem;
   font-weight: 800;
   color: var(--text);
-  text-decoration: none;
+  text-decoration: none !important;
   letter-spacing: -0.025em;
 }
 
@@ -131,7 +135,7 @@ textarea:focus-visible {
 
 .nav-links a {
   color: var(--text-sub);
-  text-decoration: none;
+  text-decoration: none !important;
   font-size: 0.9rem;
   font-weight: 600;
   padding: 9px 16px;
@@ -310,7 +314,7 @@ textarea:focus-visible {
   border-radius: var(--radius-sm);
   font-size: 0.95rem;
   font-weight: 700;
-  text-decoration: none;
+  text-decoration: none !important;
   cursor: pointer;
   border: none;
   transition: all var(--transition);
@@ -362,7 +366,7 @@ textarea:focus-visible {
   to { transform: rotate(360deg); }
 }
 
-/* ── FEATURE CARDS ─────────────────────────────────────────── */
+/* ── FEATURE CARDS & COLORFUL LOGO BADGES ──────────────────── */
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -379,6 +383,9 @@ textarea:focus-visible {
   position: relative;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  text-decoration: none !important;
+  display: flex;
+  flex-direction: column;
 }
 
 .feature-card::before {
@@ -393,11 +400,53 @@ textarea:focus-visible {
 .feature-card:hover {
   border-color: var(--teal-light);
   transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(13, 148, 136, 0.12);
+  box-shadow: 0 14px 32px rgba(13, 148, 136, 0.14);
 }
 
 .feature-card:hover::before {
   opacity: 1;
+}
+
+/* Colorful Icon Badges */
+.feature-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+  transition: transform var(--transition);
+}
+
+.feature-icon svg {
+  width: 24px;
+  height: 24px;
+  color: #ffffff;
+}
+
+.feature-card:hover .feature-icon {
+  transform: scale(1.08);
+}
+
+.icon-url {
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  box-shadow: 0 6px 18px rgba(14, 165, 233, 0.35);
+}
+
+.icon-sms {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+}
+
+.icon-email {
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  box-shadow: 0 6px 18px rgba(139, 92, 246, 0.35);
+}
+
+.icon-apk {
+  background: linear-gradient(135deg, #f59e0b, #f43f5e);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.35);
 }
 
 .feature-card h3 {
@@ -405,15 +454,14 @@ textarea:focus-visible {
   font-weight: 800;
   margin-bottom: 10px;
   color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  text-decoration: none !important;
 }
 
 .feature-card p {
   color: var(--text-sub);
   font-size: 0.9rem;
   line-height: 1.65;
+  text-decoration: none !important;
 }
 
 /* ── FORM CARDS (LOGIN & REGISTER) ─────────────────────────── */
@@ -501,12 +549,13 @@ textarea:focus-visible {
 
 .form-footer a {
   color: var(--teal);
-  text-decoration: none;
+  text-decoration: none !important;
   font-weight: 700;
 }
 
 .form-footer a:hover {
-  text-decoration: underline;
+  text-decoration: none !important;
+  color: var(--teal-dark);
 }
 
 /* ── SCAN CARDS & PAGES ────────────────────────────────────── */
