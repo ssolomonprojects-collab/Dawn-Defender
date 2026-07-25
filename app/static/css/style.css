@@ -560,11 +560,32 @@ textarea:focus-visible {
   margin-bottom: 32px;
 }
 
-.scan-header h1 {
+.scan-header-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.scan-header-title .feature-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.scan-header-title .feature-icon svg {
+  width: 28px;
+  height: 28px;
+  color: #ffffff;
+}
+
+.scan-header-title h1 {
   font-size: 2rem;
   font-weight: 800;
   letter-spacing: -0.03em;
-  margin-bottom: 8px;
+  margin-bottom: 0;
   color: var(--text);
 }
 
