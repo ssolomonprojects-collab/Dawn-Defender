@@ -31,11 +31,22 @@ def create_app():
         app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + db_path
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["UPLOAD_FOLDER"] = os.path.join(basedir, "app", "static", "uploads")
+    
+    # Configure upload directory safely for Vercel (/tmp) vs Local
+    if os.getenv("VERCEL"):
+        app.config["UPLOAD_FOLDER"] = "/tmp/uploads"
+    else:
+        app.config["UPLOAD_FOLDER"] = os.path.join(basedir, "app", "static", "uploads")
+
     app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB max upload
 
-    os.makedirs(os.path.join(basedir, "instance"), exist_ok=True)
-    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+    # Create directories safely (handles Vercel read-only filesystem)
+    try:
+        if not os.getenv("VERCEL"):
+            os.makedirs(os.path.join(basedir, "instance"), exist_ok=True)
+        os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+    except OSError:
+        pass
 
     db.init_app(app)
 
